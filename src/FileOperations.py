@@ -17,6 +17,9 @@ def __lldb_init_module(debugger, internal_dict):
     debugger.HandleCommand(
         'command script add -h "upload local file to remote device" -f '
         'FileOperations.upload_file ufile')
+    debugger.HandleCommand(
+        'command script add -h "remove file on remote device" -f '
+        'FileOperations.remove_file rm')
 
 
 def download_file(debugger, command, result, internal_dict):
@@ -118,6 +121,34 @@ def upload_file(debugger, command, result, internal_dict):
         if success:
             message = write_data_to_file(debugger, data_addr, data_size, dst, file_name)
             print(message)
+
+
+def remove_file(debugger, command, result, internal_dict):
+    """
+    remove file on remote device
+    """
+    # 去掉转义符
+    command = command.replace('\\', '\\\\')
+    # posix=False特殊符号处理相关，确保能够正确解析参数，因为OC方法前有-
+    command_args = shlex.split(command, posix=False)
+    # 创建parser
+    parser = generate_upload_parser('rm')
+    # 解析参数，捕获异常
+    try:
+        # options是所有的选项，key-value形式，args是其余剩余所有参数，不包含options
+        (options, args) = parser.parse_args(command_args)
+    except Exception as error:
+        print(error)
+        result.SetError("\n" + parser.get_usage())
+        return
+
+    if len(args) != 1:
+        print(parser.get_usage())
+        return
+
+    filepath = args[0]
+    message = remove_file_on_device(debugger, filepath)
+    print(message)
 
 
 def dump_data(debugger, output_filepath, data_size, data_addr):
@@ -307,7 +338,6 @@ def allocate_memory(debugger, size):
     
     NSDictionary *file_dict = nil;
     if (file_data) {
-        NSUInteger len = [file_data length];
         const void *bytes = (const void *)[file_data bytes];
         NSString *data_addr = [NSString stringWithFormat:@"%lu", (NSUInteger)bytes];
         file_dict = @{
@@ -339,12 +369,16 @@ def write_data_to_file(debugger, data_addr, data_size, dst, file_name):
     command_script += r'''
     BOOL isDirectory = NO;
     NSFileManager *fileManager = [NSFileManager defaultManager];
-    [fileManager fileExistsAtPath:pathOrDir isDirectory:&isDirectory];
+    BOOL exists = [fileManager fileExistsAtPath:pathOrDir isDirectory:&isDirectory];
     NSString *filepath = nil;
     if (isDirectory) {
         filepath = [pathOrDir stringByAppendingPathComponent:filename];
     } else {
         filepath = pathOrDir;
+        if (!exists) {
+            NSString *dir = [filepath stringByDeletingLastPathComponent];
+            [fileManager createDirectoryAtPath:dir withIntermediateDirectories:YES attributes:nil error:nil];
+        }
     }
     
     NSData *data = [NSData dataWithBytes:data_addr length:data_size];
@@ -352,6 +386,61 @@ def write_data_to_file(debugger, data_addr, data_size, dst, file_name):
     [data writeToFile:filepath options:kNilOptions error:&error];
     
     error != nil ? error.localizedDescription : @"upload success";
+    '''
+
+    ret_str = exe_script(debugger, command_script)
+
+    return ret_str
+
+
+def remove_file_on_device(debugger, filepath):
+    command_script = '@import Foundation;\n'
+    command_script += 'NSString *filepath = @"' + filepath + '";\n'
+    command_script += r'''
+    BOOL isDirectory = NO;
+    NSFileManager *fileManager = [NSFileManager defaultManager];
+    BOOL exists = [fileManager fileExistsAtPath:filepath isDirectory:&isDirectory];
+    
+    void (^removeFile)(NSString *path, NSMutableString *message, BOOL needPath);
+    removeFile = ^(NSString *path, NSMutableString *message, BOOL needPath) {
+        NSError *error = nil;
+        [fileManager removeItemAtPath:path error:&error];
+        if (error) {
+            [message appendFormat:@"%@\n", error.localizedDescription];
+        } else {
+            if (needPath) {
+                [message appendFormat:@"remove %@ success\n", path];
+            } else {
+                [message appendFormat:@"remove success\n"];
+            }
+        }
+    };
+    NSMutableString *message = [NSMutableString string];
+    if (isDirectory) {
+        NSArray *array = [fileManager subpathsAtPath:filepath];
+        NSMutableArray *subpaths = [NSMutableArray arrayWithArray:array];
+        // 排序
+        NSInteger count = [subpaths count];
+        NSInteger j = 0;
+        for (NSInteger idx = 1; idx < count; idx++) {
+            NSString *subpath = subpaths[idx];
+            j = idx;
+            while (j > 0 && [subpaths[j - 1] compare:subpath] == NSOrderedAscending) {
+                subpaths[j] = subpaths[j - 1];
+                j--;
+            }
+            subpaths[j] = subpath;
+        }
+        for (NSString *subpath in subpaths) {
+            NSString *fullpath = [filepath stringByAppendingPathComponent:subpath];
+            removeFile(fullpath, message, YES);
+        }
+        removeFile(filepath, message, YES);
+    } else if (exists) {
+        removeFile(filepath, message, NO);
+    }
+    
+    message;
     '''
 
     ret_str = exe_script(debugger, command_script)

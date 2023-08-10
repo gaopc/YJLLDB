@@ -558,6 +558,24 @@ upload success
 
 
 
+#### rm - remove file
+
+remove file on remote device.
+
+```stylus
+(lldb) ls doc
+/var/mobile/Containers/Data/Application/B142040E-B1A0-4E97-8E76-03357585BFF8/Documents
+-rw-r--r--       12.1K 2023-08-10 07:32:05 +0000 test
+-rw-r--r--       12.1K 2023-08-10 08:22:40 +0000 uploadfile
+(lldb) rm /var/mobile/Containers/Data/Application/B142040E-B1A0-4E97-8E76-03357585BFF8/Documents/uploadfile
+remove success
+(lldb) ls doc
+/var/mobile/Containers/Data/Application/B142040E-B1A0-4E97-8E76-03357585BFF8/Documents
+-rw-r--r--       12.1K 2023-08-10 07:32:05 +0000 test
+```
+
+
+
 ## License
 
 `yjlldb` is MIT-licensed. See `LICENSE`.
