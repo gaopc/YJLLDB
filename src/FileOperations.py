@@ -9,11 +9,14 @@ import os.path
 
 def __lldb_init_module(debugger, internal_dict):
     debugger.HandleCommand(
-        'command script add -h "download file from device" -f '
-        'DownloadFile.download_file dfile')
+        'command script add -h "download file from remote device to local" -f '
+        'FileOperations.download_file dfile')
     debugger.HandleCommand(
-        'command script add -h "download directory from device" -f '
-        'DownloadFile.download_dir ddir')
+        'command script add -h "download directory from remote device to local" -f '
+        'FileOperations.download_dir ddir')
+    debugger.HandleCommand(
+        'command script add -h "upload local file to remote device" -f '
+        'FileOperations.upload_file ufile')
 
 
 def download_file(debugger, command, result, internal_dict):
@@ -78,6 +81,45 @@ def download_dir(debugger, command, result, internal_dict):
             dump_dir_with_info(debugger, dir_info)
 
 
+def upload_file(debugger, command, result, internal_dict):
+    """
+    upload local file to remote device
+    """
+    # 去掉转义符
+    command = command.replace('\\', '\\\\')
+    # posix=False特殊符号处理相关，确保能够正确解析参数，因为OC方法前有-
+    command_args = shlex.split(command, posix=False)
+    # 创建parser
+    parser = generate_upload_parser('ufile')
+    # 解析参数，捕获异常
+    try:
+        # options是所有的选项，key-value形式，args是其余剩余所有参数，不包含options
+        (options, args) = parser.parse_args(command_args)
+    except Exception as error:
+        print(error)
+        result.SetError("\n" + parser.get_usage())
+        return
+
+    if len(args) != 2:
+        print(parser.get_usage())
+        return
+
+    src = args[0]
+    dst = args[1]
+
+    stats = os.stat(src)
+    data_size = stats.st_size
+    mem_info_str = allocate_memory(debugger, data_size)
+    if mem_info_str:
+        mem_info = json.loads(mem_info_str)
+        file_name = os.path.basename(src)
+        print('uploading {}, this may take a while'.format(file_name))
+        success, data_addr = write_mem_with_info(debugger, mem_info, src, data_size)
+        if success:
+            message = write_data_to_file(debugger, data_addr, data_size, dst, file_name)
+            print(message)
+
+
 def dump_data(debugger, output_filepath, data_size, data_addr):
     directory = os.path.dirname(output_filepath)
     try_mkdir(directory)
@@ -135,6 +177,27 @@ def dump_dir_with_info(debugger, dir_info):
         data_addr = int(comps[0])
         data_size = int(comps[1])
         dump_data(debugger, output_filepath, data_size, data_addr)
+
+
+def write_mem_with_info(debugger, dir_info, src, data_size):
+    error = dir_info.get("error")
+    if error:
+        print(error)
+        return False, 0
+
+    data_addr = int(dir_info["data_addr"])
+
+    with open(src, 'rb') as src_file:
+        file_data = src_file.read()
+        target = debugger.GetSelectedTarget()
+        process = target.GetProcess()
+        error = lldb.SBError()
+        process.WriteMemory(data_addr, file_data, error)
+        if not error.Success():
+            print(error.GetCString())
+            return False, 0
+
+    return True, data_addr
 
 
 def load_file(debugger, filepath):
@@ -236,6 +299,66 @@ def load_dir(debugger, filepath):
     return ret_str
 
 
+def allocate_memory(debugger, size):
+    command_script = '@import Foundation;'
+    command_script += 'size_t size = {};'.format(size)
+    command_script += r'''
+    NSMutableData *file_data = [NSMutableData dataWithCapacity:size];
+    
+    NSDictionary *file_dict = nil;
+    if (file_data) {
+        NSUInteger len = [file_data length];
+        const void *bytes = (const void *)[file_data bytes];
+        NSString *data_addr = [NSString stringWithFormat:@"%lu", (NSUInteger)bytes];
+        file_dict = @{
+            @"data_addr": data_addr,
+        };
+    } else {
+        file_dict = @{
+            @"error": @"allocate memory failed",
+        };
+    }
+    
+    NSData *json_data = [NSJSONSerialization dataWithJSONObject:file_dict options:kNilOptions error:nil];
+    // 4 NSUTF8StringEncoding
+    NSString *json_str = [[NSString alloc] initWithData:json_data encoding:4];
+    json_str;
+    '''
+
+    ret_str = exe_script(debugger, command_script)
+
+    return ret_str
+
+
+def write_data_to_file(debugger, data_addr, data_size, dst, file_name):
+    command_script = '@import Foundation;\n'
+    command_script += 'NSString *pathOrDir = @"' + dst + '";\n'
+    command_script += 'NSString *filename = @"' + file_name + '";\n'
+    command_script += 'const void *data_addr = (const void *){};\n'.format(data_addr)
+    command_script += 'size_t data_size = {};\n'.format(data_size)
+    command_script += r'''
+    BOOL isDirectory = NO;
+    NSFileManager *fileManager = [NSFileManager defaultManager];
+    [fileManager fileExistsAtPath:pathOrDir isDirectory:&isDirectory];
+    NSString *filepath = nil;
+    if (isDirectory) {
+        filepath = [pathOrDir stringByAppendingPathComponent:filename];
+    } else {
+        filepath = pathOrDir;
+    }
+    
+    NSData *data = [NSData dataWithBytes:data_addr length:data_size];
+    NSError *error = nil;
+    [data writeToFile:filepath options:kNilOptions error:&error];
+    
+    error != nil ? error.localizedDescription : @"upload success";
+    '''
+
+    ret_str = exe_script(debugger, command_script)
+
+    return ret_str
+
+
 def try_mkdir(dir_path):
     if not os.path.exists(dir_path):
         os.makedirs(dir_path)
@@ -265,6 +388,15 @@ def exe_script(debugger, command_script):
 
 def generate_option_parser(prog):
     usage = "usage: %prog filepath [filepath]\n" + \
+            "Use '%prog -h' for option desc"
+
+    parser = optparse.OptionParser(usage=usage, prog=prog)
+
+    return parser
+
+
+def generate_upload_parser(prog):
+    usage = "usage: %prog local_path remote_path\n" + \
             "Use '%prog -h' for option desc"
 
     parser = optparse.OptionParser(usage=usage, prog=prog)

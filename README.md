@@ -537,6 +537,27 @@ dumping JITDemo.app, this may take a while
 
 
 
+#### ufile - upload local file to device
+
+upload local file to the specified directory or path on device.
+
+```stylus
+(lldb) doc
+/var/mobile/Containers/Data/Application/1171F451-C2DC-47E6-B6E3-74A0FE5A6572/Documents
+(lldb) ufile /Users/xxx/uploadfile /var/mobile/Containers/Data/Application/1171F451-C2DC-47E6-B6E3-74A0FE5A6572/Documents
+uploading uploadfile, this may take a while
+upload success
+(lldb) ufile /Users/xxx/uploadfile /var/mobile/Containers/Data/Application/1171F451-C2DC-47E6-B6E3-74A0FE5A6572/Documents/test
+uploading uploadfile, this may take a while
+upload success
+(lldb) ls doc
+/var/mobile/Containers/Data/Application/1171F451-C2DC-47E6-B6E3-74A0FE5A6572/Documents
+-rw-r--r--       12.1K 2023-08-10 07:11:29 +0000 test
+-rw-r--r--       12.1K 2023-08-10 07:11:22 +0000 uploadfile
+```
+
+
+
 ## License
 
 `yjlldb` is MIT-licensed. See `LICENSE`.
