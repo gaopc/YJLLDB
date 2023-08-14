@@ -334,12 +334,11 @@ def allocate_memory(debugger, size):
     command_script = '@import Foundation;'
     command_script += 'size_t size = {};'.format(size)
     command_script += r'''
-    NSMutableData *file_data = [NSMutableData dataWithCapacity:size];
+    void *file_data = calloc(1, size);
     
     NSDictionary *file_dict = nil;
     if (file_data) {
-        const void *bytes = (const void *)[file_data bytes];
-        NSString *data_addr = [NSString stringWithFormat:@"%lu", (NSUInteger)bytes];
+        NSString *data_addr = [NSString stringWithFormat:@"%lu", (NSUInteger)file_data];
         file_dict = @{
             @"data_addr": data_addr,
         };
@@ -364,7 +363,7 @@ def write_data_to_file(debugger, data_addr, data_size, dst, file_name):
     command_script = '@import Foundation;\n'
     command_script += 'NSString *pathOrDir = @"' + dst + '";\n'
     command_script += 'NSString *filename = @"' + file_name + '";\n'
-    command_script += 'const void *data_addr = (const void *){};\n'.format(data_addr)
+    command_script += 'void *data_addr = (void *){};\n'.format(data_addr)
     command_script += 'size_t data_size = {};\n'.format(data_size)
     command_script += r'''
     BOOL isDirectory = NO;
@@ -382,6 +381,7 @@ def write_data_to_file(debugger, data_addr, data_size, dst, file_name):
     }
     
     NSData *data = [NSData dataWithBytes:data_addr length:data_size];
+    free(data_addr);
     NSError *error = nil;
     [data writeToFile:filepath options:kNilOptions error:&error];
     
