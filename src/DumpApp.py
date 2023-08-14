@@ -223,6 +223,7 @@ def get_app_regions(debugger):
     command_script += r'''
     NSBundle *mainBundle = [NSBundle mainBundle];
     NSString *bundlePath = mainBundle.bundlePath;
+    bundlePath = [bundlePath stringByReplacingOccurrencesOfString:@"/private" withString:@""];
 
     NSMutableArray *encryptedImages = [NSMutableArray array];
     NSMutableArray *files = [NSMutableArray array];
