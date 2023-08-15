@@ -1,4 +1,4 @@
-## yjlldb
+## YJLLDB
 
 一些用于调试iOS应用的lldb命令。Some very useful lldb commands for iOS debugging.
 
@@ -54,7 +54,7 @@
 
 1. Clone this repo
 2. Open up (or create) **~/.lldbinit**
-3. Add the following command to your ~/.lldbinit file: `command script import /path/to/yjlldb/src/yjlldb.py`
+3. Add the following command to your ~/.lldbinit file: `command script import /path/to/YJLLDB/src/yjlldb.py`
 
 ## usage
 
