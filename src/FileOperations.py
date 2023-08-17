@@ -476,8 +476,7 @@ def exe_script(debugger, command_script):
 
 
 def generate_option_parser(prog):
-    usage = "usage: %prog filepath [filepath]\n" + \
-            "Use '%prog -h' for option desc"
+    usage = "usage: %prog filepath [filepath]\n"
 
     parser = optparse.OptionParser(usage=usage, prog=prog)
 
@@ -485,8 +484,7 @@ def generate_option_parser(prog):
 
 
 def generate_upload_parser(prog):
-    usage = "usage: %prog local_path remote_path\n" + \
-            "Use '%prog -h' for option desc"
+    usage = "usage: %prog local_path remote_path\n"
 
     parser = optparse.OptionParser(usage=usage, prog=prog)
 

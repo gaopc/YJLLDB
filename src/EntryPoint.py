@@ -136,36 +136,8 @@ def exe_script(debugger, command_script):
 
 
 def generate_option_parser():
-    usage = "usage: %prog [options] ModuleName\n" + \
-            "Use '%prog -h' for option desc"
+    usage = "usage: %prog\n"
 
-    parser = optparse.OptionParser(usage=usage, prog='mtrace_fs')
-    parser.add_option("-m", "--method",
-                      action="store_false",
-                      default=True,
-                      dest="method",
-                      help="only trace objc method")
-    parser.add_option("-1", "--oneshot",
-                      action="store_false",
-                      default=True,
-                      dest="oneshot",
-                      help="oneshot")
-    parser.add_option("-H", "--humanized",
-                      action="store_true",
-                      default=False,
-                      dest="humanized",
-                      help="print humanized backtrace, but higher cost than default")
-
-    parser.add_option("-v", "--verbose",
-                      action="store_true",
-                      default=False,
-                      dest="verbose",
-                      help="verbose output")
-
-    parser.add_option("-i", "--individual",
-                      action="store_true",
-                      default=False,
-                      dest="individual",
-                      help="create breakpoints with individual mode")
+    parser = optparse.OptionParser(usage=usage, prog='main')
 
     return parser

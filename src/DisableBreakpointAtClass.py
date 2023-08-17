@@ -71,8 +71,6 @@ def disable_breakpoint_at(debugger, command, result, internal_dict):
 
 def generate_option_parser():
     usage = "usage: %prog [options] class_name\n" + \
-            "Use '%prog -h' for option desc\n" + \
-            "\n" + \
             "for example:\n" + \
             "   %prog -i ViewController\n" + \
             "   or\n" + \

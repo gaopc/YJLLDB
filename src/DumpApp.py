@@ -365,8 +365,7 @@ def exe_script(debugger, command_script):
 
 
 def generate_option_parser(prog):
-    usage = "usage: %prog\n" + \
-            "Use '%prog -h' for option desc"
+    usage = "usage: %prog\n"
 
     parser = optparse.OptionParser(usage=usage, prog=prog)
     parser.add_option("-v", "--min_os_version",
