@@ -186,7 +186,7 @@ def trace_all_functions_in_module(debugger, command, result, internal_dict):
         result.AppendMessage("module {} not found".format(lookup_module_name))
 
 
-def get_desc_for_address(target, addr):
+def get_desc_for_address(addr):
     symbol = addr.GetSymbol()
 
     module = addr.GetModule()
@@ -263,7 +263,7 @@ def breakpoint_handler(frame, bp_loc, dict):
         call_num = 0
 
         addr = bp_loc.GetAddress()
-        desc = get_desc_for_address(target, addr)
+        desc = get_desc_for_address(addr)
         offset = current_num_frames - base_num_frames + extra_offset
         if offset == 0:
             print('call {}'.format(desc))
