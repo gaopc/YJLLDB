@@ -24,11 +24,15 @@
 
 ​     \* [entitlements - dump entitlements](#entitlements---dump-entitlements)
 
-​     \* [segments - dump segments](#segments---dump-segments)
+​     \* [segments - print segments](#segments---print-segments)
+
+​     \* [main](#main)
 
 ​     \* [executable - print main executable name](#executable---print-main-executable-name)
 
-​     \* [classes - dump classes](#classes---dump-classes)
+​     \* [appdelegate](#appdelegate)
+
+​     \* [classes - print class names](#classes---print-class-names)
 
 ​     \* [image_list](#image_list)
 
@@ -49,6 +53,16 @@
 ​     \* [dfile - download file](#dfile---download-file)
 
 ​     \* [ddir - download directory](#ddir---download-directory)
+
+​     \* [ufile - upload local file to device](#ufile---upload-local-file-to-device)
+
+​     \* [rm - remove file](#rm---remove-file)
+
+​     \* [fblock - find block](#fblock---find-block)
+
+​     \* [blocks - find global blocks](#blocks---find-global-blocks)
+
+​     \* [bblocks - break global blocks](#bblocks---break-global-blocks)
 
 ## Installation
 
@@ -594,6 +608,98 @@ remove success
 (lldb) ls doc
 /var/mobile/Containers/Data/Application/B142040E-B1A0-4E97-8E76-03357585BFF8/Documents
 -rw-r--r--       12.1K 2023-08-10 07:32:05 +0000 test
+```
+
+
+
+#### fblock - find block
+
+Find the specified block(s) in user modules.
+
+```stylus
+(lldb) po $x0
+<__NSGlobalBlock__: 0x100f18210>
+(lldb) x/4g 0x100f18210
+0x100f18210: 0x00000001b57df288 0x0000000050000000
+0x100f18220: 0x00000001043b9724 0x00000001043bc1f0
+(lldb) info 0x00000001043b9724
+0x00000001043b9724,   ___lldb_unnamed_symbol77     <+0> `JITDemo`__TEXT.__text + 0x290
+
+(lldb) fblock 0x100f18210
+-----try look up block in JITDemo-----
+find a block: 0x100f18210 in JITDemo`-[ViewController touchesBegan:withEvent:]
+1 block(s) resolved
+```
+
+
+
+#### blocks - find global blocks
+
+Find global blocks in user modules.
+
+```stylus
+(lldb) blocks
+-----try look up block in JITDemo-----
+find a block: 0x100f18190 in JITDemo`-[ViewController touchesBegan:withEvent:]
+using global block: 0x100f18130 in JITDemo`-[ViewController touchesBegan:withEvent:]
+find a block: 0x100f181d0 in JITDemo`-[ViewController touchesBegan:withEvent:]
+find a block: 0x100f18210 in JITDemo`-[ViewController touchesBegan:withEvent:]
+find a block: 0x100f18170 in JITDemo`-[ViewController viewDidLoad]
+-----try look up block in AFNetworking-----
+find a block: 0x100f508d8 in AFNetworking`AFHTTPRequestSerializerObservedKeyPaths at once.h:85:3
+find a block: 0x100f50910 in AFNetworking`+[UIImage(AFNetworkingSafeImageLoading) af_safeImageWithData:] at once.h:85:3
+find a block: 0x100f50ad8 in AFNetworking`-[AFURLSessionManagerTaskDelegate URLSession:task:didCompleteWithError:] at once.h:85:3
+find a block: 0x100f50ab8 in AFNetworking`url_session_manager_completion_group at once.h:85:3
+find a block: 0x100f50bf8 in AFNetworking`-[WKWebView(_AFNetworking) sessionManager] at once.h:85:3
+find a block: 0x100f50c18 in AFNetworking`-[WKWebView(_AFNetworking) responseSerializer] at once.h:85:3
+-----try look up block in LLDBJIT-----
+find a block: 0x100fc41a0 in LLDBJIT`+[MachoTool findMacho]
+find a block: 0x100fc41e0 in LLDBJIT`+[MachoTool findMacho]
+find a block: 0x100fc4220 in LLDBJIT`+[Image dumpSegments:]
+find a block: 0x100fc4260 in LLDBJIT`+[Image dumpApp]
+15 block(s) resolved
+```
+
+
+
+#### bblocks - break global blocks
+
+Break global blocks in user modules
+
+```stylus
+(lldb) bblocks
+-----try look up block in JITDemo-----
+break block: 0x100f18130 with Breakpoint 11: JITDemo`___lldb_unnamed_symbol73, address = 0x100f15494
+break block: 0x100f18170 with Breakpoint 12: JITDemo`___lldb_unnamed_symbol74, address = 0x100f15580
+break block: 0x100f18190 with Breakpoint 13: JITDemo`___lldb_unnamed_symbol75, address = 0x100f156d4
+break block: 0x100f181d0 with Breakpoint 14: JITDemo`___lldb_unnamed_symbol76, address = 0x100f156fc
+break block: 0x100f18210 with Breakpoint 15: JITDemo`___lldb_unnamed_symbol77, address = 0x100f15724
+-----try look up block in AFNetworking-----
+break block: 0x100f508d8 with Breakpoint 16: AFNetworking`__AFHTTPRequestSerializerObservedKeyPaths_block_invoke at AFURLRequestSerialization.m:177:0, address = 0x100f35a30
+break block: 0x100f50910 with Breakpoint 17: AFNetworking`__62+[UIImage(AFNetworkingSafeImageLoading) af_safeImageWithData:]_block_invoke at AFURLResponseSerialization.m:547:0, address = 0x100f377d0
+break block: 0x100f50ab8 with Breakpoint 18: AFNetworking`__url_session_manager_completion_group_block_invoke at AFURLSessionManager.m:38:0, address = 0x100f3d834
+break block: 0x100f50ad8 with Breakpoint 19: AFNetworking`__url_session_manager_processing_queue_block_invoke at AFURLSessionManager.m:28:0, address = 0x100f3d858
+break block: 0x100f50bf8 with Breakpoint 20: AFNetworking`__41-[WKWebView(AFNetworking) sessionManager]_block_invoke at WKWebView+AFNetworking.m:55:0, address = 0x100f4011c
+break block: 0x100f50c18 with Breakpoint 21: AFNetworking`__45-[WKWebView(AFNetworking) responseSerializer]_block_invoke at WKWebView+AFNetworking.m:71:0, address = 0x100f40274
+-----try look up block in LLDBJIT-----
+break block: 0x100fc41a0 with Breakpoint 22: LLDBJIT`__22+[MachoTool findMacho]_block_invoke, address = 0x100fbe744
+break block: 0x100fc41e0 with Breakpoint 23: LLDBJIT`__22+[MachoTool findMacho]_block_invoke_2, address = 0x100fbe818
+break block: 0x100fc4220 with Breakpoint 24: LLDBJIT`__22+[Image dumpSegments:]_block_invoke, address = 0x100fbf2b4
+break block: 0x100fc4260 with Breakpoint 25: LLDBJIT`__16+[Image dumpApp]_block_invoke, address = 0x100fc02b4
+set 15 breakpoints
+```
+
+or
+
+```stylus
+(lldb) bblocks JITDemo
+-----try look up block in JITDemo-----
+break block: 0x100f18130 with Breakpoint 26: JITDemo`___lldb_unnamed_symbol73, address = 0x100f15494
+break block: 0x100f18170 with Breakpoint 27: JITDemo`___lldb_unnamed_symbol74, address = 0x100f15580
+break block: 0x100f18190 with Breakpoint 28: JITDemo`___lldb_unnamed_symbol75, address = 0x100f156d4
+break block: 0x100f181d0 with Breakpoint 29: JITDemo`___lldb_unnamed_symbol76, address = 0x100f156fc
+break block: 0x100f18210 with Breakpoint 30: JITDemo`___lldb_unnamed_symbol77, address = 0x100f15724
+set 5 breakpoints
 ```
 
 
