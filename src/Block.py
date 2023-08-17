@@ -29,7 +29,7 @@ def find_global_blocks(debugger, command, result, internal_dict):
     # posix=False特殊符号处理相关，确保能够正确解析参数，因为OC方法前有-
     command_args = shlex.split(command, posix=False)
     # 创建parser
-    parser = generate_option_parser()
+    parser = generate_option_parser('blocks')
     # 解析参数，捕获异常
     try:
         # options是所有的选项，key-value形式，args是其余剩余所有参数，不包含options
@@ -143,8 +143,16 @@ def find_global_blocks(debugger, command, result, internal_dict):
                     if len(adr_op_list) != 2:
                         continue
 
+                    if '#' not in adr_op_list[1]:
+                        continue
+
                     adr_addr = next_ins.GetAddress().GetLoadAddress(target)
-                    adr_offset = int(adr_op_list[1].replace('#', ''), 16)
+                    try:
+                        adr_offset = int(adr_op_list[1].replace('#', ''), 16)
+                    except Exception as error:
+                        print(error)
+                        continue
+
                     target_addr = adr_addr + adr_offset
                     next_ins_addr = next_ins.GetAddress()
                     # print('target_addr: 0x{:x} {}'.format(target_addr, next_ins_addr))
@@ -168,6 +176,8 @@ def find_global_blocks(debugger, command, result, internal_dict):
                     # print('0x{:x}: add {}'.format(next_ins.GetAddress().GetLoadAddress(target), next_ins_ops))
                     adr_op_list = adr_ins_ops.split(',')
                     if len(adr_op_list) != 3:
+                        continue
+                    if '#' not in adr_op_list[2]:
                         continue
 
                     adr_offset = int(adr_op_list[2].replace('#', ''), 16)
@@ -200,10 +210,19 @@ def find_global_blocks(debugger, command, result, internal_dict):
                     if ']!' in operand:
                         continue
 
+                    if '#' not in operand:
+                        continue
+
                     operand = operand.replace('#', '')
                     operand = operand.replace(']', '')
 
-                    adr_offset = int(operand, 16)
+                    try:
+                        adr_offset = int(operand, 16)
+                    except Exception as error:
+                        print(error)
+                        adrp_ins = None
+                        continue
+
                     ldr_addr = (adrp_addr & 0xFFFFFFFFFFFFF000) + (int(adrp_op_list[-1]) * 4096) + adr_offset
                     error = lldb.SBError()
                     target_addr = process.ReadPointerFromMemory(ldr_addr, error)
@@ -258,7 +277,7 @@ def find_blocks(debugger, command, result, internal_dict):
     # posix=False特殊符号处理相关，确保能够正确解析参数，因为OC方法前有-
     command_args = shlex.split(command, posix=False)
     # 创建parser
-    parser = generate_option_parser()
+    parser = generate_option_parser('fblock', ' [address] [address]')
     # 解析参数，捕获异常
     try:
         # options是所有的选项，key-value形式，args是其余剩余所有参数，不包含options
@@ -272,7 +291,17 @@ def find_blocks(debugger, command, result, internal_dict):
         result.AppendMessage(parser.get_usage())
         return
     else:
-        addr_list = [int(x, 16) for x in args]
+        all_addr_list = []
+        for arg in args:
+            value = int(arg, 16)
+            if value % 8:
+                print('0x{:x} could not be a block object'.format(value))
+                continue
+
+            all_addr_list.append(value)
+
+    if len(all_addr_list) == 0:
+        return
 
     target = debugger.GetSelectedTarget()
     process = target.GetProcess()
@@ -301,6 +330,18 @@ def find_blocks(debugger, command, result, internal_dict):
             continue
 
         global_blocks = []
+        addr_list = []
+        for block_info in blocks_info_list:
+            # print("block_info: {}".format(block_info))
+            comps = block_info.split(':')
+            block_addr = int(comps[1], 16)
+            if block_addr in all_addr_list:
+                addr_list.append(block_addr)
+                all_addr_list.remove(block_addr)
+
+        if len(addr_list) == 0:
+            continue
+
         for symbol in module:
             # 2为Code，5为Trampoline，即调用的系统函数
             if symbol.GetType() != 2:
@@ -344,6 +385,9 @@ def find_blocks(debugger, command, result, internal_dict):
                     if len(adr_op_list) != 2:
                         continue
 
+                    if '#' not in adr_op_list[1]:
+                        continue
+
                     adr_addr = next_ins.GetAddress().GetLoadAddress(target)
                     adr_offset = int(adr_op_list[1].replace('#', ''), 16)
                     target_addr = adr_addr + adr_offset
@@ -367,6 +411,8 @@ def find_blocks(debugger, command, result, internal_dict):
                     # print('0x{:x}: add {}'.format(next_ins.GetAddress().GetLoadAddress(target), next_ins_ops))
                     adr_op_list = adr_ins_ops.split(',')
                     if len(adr_op_list) != 3:
+                        continue
+                    if '#' not in adr_op_list[2]:
                         continue
 
                     adr_offset = int(adr_op_list[2].replace('#', ''), 16)
@@ -395,6 +441,9 @@ def find_blocks(debugger, command, result, internal_dict):
                         continue
 
                     if ']!' in operand:
+                        continue
+
+                    if '#' not in operand:
                         continue
 
                     operand = operand.replace('#', '')
@@ -432,10 +481,14 @@ def find_blocks(debugger, command, result, internal_dict):
             if len(addr_list) == 0:
                 break
 
-        if len(addr_list) == 0:
+        for block_addr in addr_list:
+            print('block: 0x{:x} not found'.format(block_addr))
+            addr_list.remove(block_addr)
+
+        if len(all_addr_list) == 0:
             break
 
-    for index, block_addr in enumerate(addr_list):
+    for block_addr in all_addr_list:
         print('block: 0x{:x} not found'.format(block_addr))
 
     result.AppendMessage("{} location(s) found".format(total_count))
@@ -450,7 +503,7 @@ def break_global_blocks(debugger, command, result, internal_dict):
     # posix=False特殊符号处理相关，确保能够正确解析参数，因为OC方法前有-
     command_args = shlex.split(command, posix=False)
     # 创建parser
-    parser = generate_option_parser()
+    parser = generate_option_parser('bblocks')
     # 解析参数，捕获异常
     try:
         # options是所有的选项，key-value形式，args是其余剩余所有参数，不包含options
@@ -694,10 +747,9 @@ def exe_script(debugger, command_script):
     return response
 
 
-def generate_option_parser():
-    usage = "usage: %prog\n" + \
-            "Use '%prog -h' for option desc"
+def generate_option_parser(proc, args=''):
+    usage = "usage: %prog{}\n".format(args)
 
-    parser = optparse.OptionParser(usage=usage, prog='blocks')
+    parser = optparse.OptionParser(usage=usage, prog=proc)
 
     return parser
