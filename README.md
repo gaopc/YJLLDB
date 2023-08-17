@@ -60,7 +60,7 @@
 
 #### bab - break at bytes
 
-set breakpoints at the specified bytes in user modules.
+Set breakpoints at the specified bytes in user modules.
 
 ```stylus
 // for example, break at ret
@@ -81,9 +81,9 @@ LLDBCode`-[ViewController viewDidLoad]:
 
 #### baf - break all functions in module
 
-break all functions and methods in the specified module.
+Break all functions and methods in the specified module.
 
-for example，break UIKit:
+For example，break UIKit:
 
 ```stylus
 (lldb) baf UIKit
@@ -96,7 +96,7 @@ Breakpoint 3: 75016 locations
 
 #### bdc - breakpoint disable current
 
-disable current breakpoint and continue.
+Disable current breakpoint and continue.
 
 ```stylus
 (lldb) thread info
@@ -111,7 +111,7 @@ and continue
 
 #### symbolic
 
-symbolic address list.
+Symbolic address list.
 
 ```stylus
 (lldb) symbolic (0x1845aed8c 0x1837685ec 0x18450a448 0x104360f78 0x18e4fd83c 0x18e3a3760 0x18e39d7c8 0x18e392890 0x18e3911d0 0x18eb72d1c 0x18eb752c8 0x18eb6e368 0x184557404 0x184556c2c 0x18455479c 0x184474da8 0x186459020 0x18e491758 0x104361da0 0x183f05fc0)
@@ -160,7 +160,7 @@ frame #3: 0x104360f78 Interlock`-[ViewController touchesBegan:withEvent:] + at V
 
 #### ls 
 
-list directory contents, just like `ls -lh` on Mac.
+List directory contents, just like `ls -lh` on Mac.
 
 ```stylus
 (lldb) ls bu
@@ -186,7 +186,7 @@ drwxr-xr-x         64B 2023-05-16 04:51:14 +0000 tmp
 
 #### find_el - find endless loop
 
-detects endless loop in all threads at this point.
+Detects endless loop in all threads at this point.
 
 ```objective-c
 - (void)touchesBegan:(NSSet<UITouch *> *)touches withEvent:(UIEvent *)event {
@@ -214,7 +214,7 @@ call Interlock`-[ViewController touchesBegan:withEvent:] + 136 at ViewController
 
 #### thread_eb - extended backtrace of thread
 
-get extended backtrace of thread.
+Get extended backtrace of thread.
 
 ```stylus
 (lldb) bt
@@ -241,7 +241,7 @@ thread #4294967295: tid = 0x190c, 0x0000000104e907cc libdispatch.dylib`_dispatch
 
 #### entitlements - dump entitlements
 
-dump codesign entitlements of the specified module if any.
+Dump codesign entitlements of the specified module if any.
 
 ```stylus
 (lldb) ent
@@ -271,7 +271,7 @@ UIKit apparently does not contain code signature
 
 #### segments - print segments
 
-print segments and section info of macho.
+Print segments and section info of macho.
 
 ```stylus
 (lldb) segments LLDBCode
@@ -311,7 +311,7 @@ print segments and section info of macho.
 
 #### executable - print main executable name
 
-print main executable name.
+Print main executable name.
 
 ```stylus
 (lldb) executable
@@ -320,9 +320,20 @@ LLDBCode
 
 
 
+#### appdelegate
+
+Find the class that conforms to the UIApplicationDelegate protocol.
+
+```stylus
+(lldb) appdelegate
+AppDelegate
+```
+
+
+
 #### classes - print class names 
 
-print class names in the specified module.
+Print class names in the specified module.
 
 ```stylus
 (lldb) classes
@@ -352,7 +363,7 @@ index   load addr(slide)       vmsize path
 
 #### slookup - look up string
 
-lookup the specified string, between start addr and end addr.
+Lookup the specified string, between start addr and end addr.
 
 ```stylus
 (lldb) image_list -c 10
@@ -384,7 +395,7 @@ found at 0x184070f7c where = [0x000000018002cf78-0x000000018002cfb8) libSystem.B
 
 #### blookup - look up bytes
 
-lookup the specified bytes in user modules.
+Lookup the specified bytes in user modules.
 
 ```stylus
 (lldb) blookup c0 03 5f d6
@@ -399,7 +410,7 @@ lookup the specified bytes in user modules.
 
 #### patch
 
-patch the specified bytes in user modules.
+Patch the specified bytes in user modules.
 
 ```stylus
 (lldb) patch c0 03 5f d6
@@ -411,7 +422,7 @@ patch 32 locations
 
 #### mtrace - trace module
 
-trace all functions in the specified module.
+Trace all functions in the specified module.
 
 ```stylus
 // begin trace
@@ -436,7 +447,7 @@ frame #0: 0x0000000102dd318c LLDBCode`__41-[ViewController touchesBegan:withEven
 
 #### bda - breakpoint disable at class
 
-disable breakpoint(s) at the specified class.
+Disable breakpoint(s) at the specified class.
 
 ```stylus
 (lldb) bda -i ViewController
@@ -456,7 +467,7 @@ disable breakpoint 1.23: where = LLDBCode`-[ViewController(extension) test] at V
 
 #### dmodule - dump module
 
-dump the specified module from memory.
+Dump the specified module from memory.
 
 ```stylus
 (lldb) dmodule UIKit
@@ -474,7 +485,7 @@ ignore __DATA_DIRTY.__common
 
 #### dapp - dump App
 
-dump current iOS App (arm64 only). Typically, dump decrypted ipa from jailbreak device.
+Dump current iOS App (arm64 only). Typically, dump decrypted ipa from jailbreak device.
 
 ```stylus
 (lldb) dapp
@@ -502,7 +513,7 @@ dump success, ipa path: /Users/xxx/lldb_dump_macho/JITDemo/JITDemo.ipa
 
 #### dfile - download file
 
-download file from home, bundle or group path.
+Download file from home, bundle or group path.
 
 ```stylus
 (lldb) dfile /var/containers/Bundle/Application/7099B2B8-39BE-4204-9BEB-5DF6A75BAA29/JITDemo.app/Info.plist
@@ -514,7 +525,7 @@ dumping Info.plist, this may take a while
 
 #### ddir - download directory
 
-download dir from home, bundle or group path.
+Download dir from home, bundle or group path.
 
 ```stylus
 (lldb) ddir /var/containers/Bundle/Application/7099B2B8-39BE-4204-9BEB-5DF6A75BAA29/JITDemo.app
@@ -539,7 +550,7 @@ dumping JITDemo.app, this may take a while
 
 #### ufile - upload local file to device
 
-upload local file to the specified directory or path on device.
+Upload local file to the specified directory or path on device.
 
 ```stylus
 (lldb) doc
@@ -560,7 +571,7 @@ upload success
 
 #### rm - remove file
 
-remove file on remote device.
+Remove file on remote device.
 
 ```stylus
 (lldb) ls doc
@@ -578,4 +589,4 @@ remove success
 
 ## License
 
-`yjlldb` is MIT-licensed. See `LICENSE`.
+`YJLLDB` is MIT-licensed. See `LICENSE`.
