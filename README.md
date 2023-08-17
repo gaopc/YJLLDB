@@ -309,6 +309,17 @@ Print segments and section info of macho.
 
 
 
+#### main
+
+Print the address of main function.
+
+```stylus
+(lldb) main
+function main at 0x102911b70(fileoff: 0x5b70)
+```
+
+
+
 #### executable - print main executable name
 
 Print main executable name.
