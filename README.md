@@ -635,7 +635,7 @@ find a block: 0x100f18210 in JITDemo`-[ViewController touchesBegan:withEvent:]
 
 #### blocks - find blocks
 
-Find all blocks in user modules.
+Find blocks in user modules and save block symbols to block_symbol.json
 
 ```stylus
 (lldb) blocks

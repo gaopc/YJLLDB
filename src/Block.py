@@ -10,7 +10,7 @@ import json
 
 def __lldb_init_module(debugger, internal_dict):
     debugger.HandleCommand(
-        'command script add -h "find blocks in user modules" -f '
+        'command script add -h "find blocks in user modules and save block symbols to block_symbol.json" -f '
         'Block.find_all_blocks blocks')
 
     debugger.HandleCommand(
@@ -24,7 +24,7 @@ def __lldb_init_module(debugger, internal_dict):
 
 def find_all_blocks(debugger, command, result, internal_dict):
     """
-    find blocks in user modules
+    find blocks in user modules and save block symbols to block_symbol.json
     """
     # 去掉转义符
     command = command.replace('\\', '\\\\')
@@ -48,25 +48,27 @@ def find_all_blocks(debugger, command, result, internal_dict):
 
     bundle_path = target.GetExecutable().GetDirectory()
     total_count = 0
-
+    block_symbols = []
+    block_dict = {}
+    global_block_var_index = 0
     for module in target.module_iter():
         module_file_spec = module.GetFileSpec()
         module_path = module_file_spec.GetFilename()
-        name = os.path.basename(module_path)
+        module_name = os.path.basename(module_path)
 
-        if len(module_list) > 0 and name not in module_list:
+        if len(module_list) > 0 and module_name not in module_list:
             continue
 
         module_dir = module_file_spec.GetDirectory()
         if bundle_path not in module_dir:
             continue
 
-        name = module_file_spec.GetFilename()
-        if name.startswith('libswift'):
+        module_name = module_file_spec.GetFilename()
+        if module_name.startswith('libswift'):
             continue
 
-        print("-----try look up block in %s-----" % name)
-        blocks_info_str = get_blocks_info(debugger, name)
+        print("-----try look up block in %s-----" % module_name)
+        blocks_info_str = get_blocks_info(debugger, module_name)
         if not blocks_info_str:
             continue
 
@@ -85,6 +87,7 @@ def find_all_blocks(debugger, command, result, internal_dict):
 
         stack_block_isa = int(blocks_info['_NSConcreteStackBlock'], 16)
         global_block_isa = int(blocks_info['_NSConcreteGlobalBlock'], 16)
+        module_slide = int(blocks_info['slide'])
 
         global_blocks = []
         block_addrs = []
@@ -96,6 +99,8 @@ def find_all_blocks(debugger, command, result, internal_dict):
             block_funcs.append(int(comps[1], 16))
 
         hits_count = 0
+        output_block_addrs = []
+        global_block_var_addrs = []
         for symbol in module:
             # 2为Code，5为Trampoline，即调用的系统函数
             if symbol.GetType() != 2:
@@ -127,6 +132,14 @@ def find_all_blocks(debugger, command, result, internal_dict):
             # 使用符号路径过滤系统库函数
             if ".platform/Developer/SDKs/" in str(sym_start_addr.GetLineEntry().GetFileSpec()):
                 continue
+
+            # 如果是已定位的block，sym_name使用block_name
+            if '___lldb_unnamed_symbol' in sym_name:
+                sym_addr = sym_start_addr.GetLoadAddress(target)
+                block_name = block_dict.get(sym_addr)
+                # print('find 0x{:x} {}'.format(sym_addr, block_name))
+                if block_name:
+                    sym_name = block_name
 
             insts = symbol.GetInstructions(target)
 
@@ -209,6 +222,7 @@ def find_all_blocks(debugger, command, result, internal_dict):
                     if stack_block_found:
                         print('\tstack block func addr 0x{:x} {}'.
                               format(target_addr, get_desc_for_address(target.ResolveLoadAddress(target_addr))))
+                        output_block_addrs.append(target_addr)
                         stack_block_found = False
                     else:
                         next_ins_addr = next_ins.GetAddress()
@@ -218,7 +232,9 @@ def find_all_blocks(debugger, command, result, internal_dict):
                             print('find a block: 0x{:x} in {}'.
                                   format(target_addr, get_desc_for_address(next_ins_addr)))
                             block_addrs.remove(target_addr)
-                            block_funcs.remove(block_funcs[idx])
+                            block_func_ptr = block_funcs[idx]
+                            block_funcs.remove(block_func_ptr)
+                            output_block_addrs.append(block_func_ptr)
                             hits_count += 1
                             total_count += 1
                         except Exception as error:
@@ -243,6 +259,7 @@ def find_all_blocks(debugger, command, result, internal_dict):
                     if stack_block_found:
                         print('\tstack block func addr 0x{:x} {}'.
                               format(target_addr, get_desc_for_address(target.ResolveLoadAddress(target_addr))))
+                        output_block_addrs.append(target_addr)
                         stack_block_found = False
                     else:
                         next_ins_addr = next_ins.GetAddress()
@@ -252,7 +269,9 @@ def find_all_blocks(debugger, command, result, internal_dict):
                             print('find a block: 0x{:x} in {}'.
                                   format(target_addr, get_desc_for_address(next_ins_addr)))
                             block_addrs.remove(target_addr)
-                            block_funcs.remove(block_funcs[idx])
+                            block_func_ptr = block_funcs[idx]
+                            block_funcs.remove(block_func_ptr)
+                            output_block_addrs.append(block_func_ptr)
                             hits_count += 1
                             total_count += 1
                         except Exception as error:
@@ -296,7 +315,7 @@ def find_all_blocks(debugger, command, result, internal_dict):
                             # print('target_addr: 0x{:x} {}'.format(target_addr, next_ins_addr))
                             if target_addr == stack_block_isa:
                                 print('find a stack block @0x{:x} in {}'.
-                                      format(next_ins_addr.GetLoadAddress(target), get_desc_for_address(next_ins_addr)))
+                                      format(next_ins_addr.GetLoadAddress(target), get_desc_for_address(next_ins_addr, sym_name)))
                                 hits_count += 1
                                 total_count += 1
                                 stack_block_found = True
@@ -310,6 +329,8 @@ def find_all_blocks(debugger, command, result, internal_dict):
                                         hits_count += 1
                                         total_count += 1
                                         global_blocks.append(target_addr)
+                                        block_func_ptr = block_funcs[idx]
+                                        global_block_var_addrs.append(block_func_ptr)
                                 except Exception as error:
                                     pass
 
@@ -326,7 +347,7 @@ def find_all_blocks(debugger, command, result, internal_dict):
                             addr = next_ins_loadaddr + ldr_offset
                             if addr == stack_block_addr:
                                 print('find a stack block @0x{:x} in {}'.
-                                      format(next_ins_loadaddr, get_desc_for_address(next_ins_addr)))
+                                      format(next_ins_loadaddr, get_desc_for_address(next_ins_addr, sym_name)))
                                 hits_count += 1
                                 total_count += 1
                                 stack_block_found = True
@@ -342,6 +363,9 @@ def find_all_blocks(debugger, command, result, internal_dict):
                                             hits_count += 1
                                             total_count += 1
                                             global_blocks.append(maybe_block)
+                                            block_func_ptr = process.ReadPointerFromMemory(maybe_block + 0x10, error)
+                                            if error.Success():
+                                                global_block_var_addrs.append(block_func_ptr)
                             continue
 
                 elif adrp_ins and next_ins.GetMnemonic(target) == 'str':
@@ -351,6 +375,49 @@ def find_all_blocks(debugger, command, result, internal_dict):
                         adrp_ins = None
                 else:
                     adrp_ins = None
+
+            for index, block_addr in enumerate(output_block_addrs):
+                func_addr = target.ResolveLoadAddress(block_addr)
+                block_name = get_desc_for_address(func_addr, False)
+                # 有符号的block不记录，保持原符号
+                if '___lldb_unnamed_symbol' not in block_name:
+                    # print(block_name)
+                    continue
+
+                if index == 0:
+                    index_str = ''
+                else:
+                    index_str = '_{}'.format(index + 1)
+
+                block_name = sym_name + '_block_invoke' + index_str
+                block_symbol = {
+                    "address": '0x{:x}'.format(block_addr - module_slide),
+                    "name": block_name
+                }
+                block_symbols.append(block_symbol)
+                block_dict[block_addr] = block_name
+                # print('cache 0x{:x} {}'.format(block_addr, block_name))
+
+            for block_addr in global_block_var_addrs:
+                func_addr = target.ResolveLoadAddress(block_addr)
+                block_name = get_desc_for_address(func_addr, False)
+                # 有符号的block不记录，保持原符号
+                if '___lldb_unnamed_symbol' not in block_name:
+                    # print(block_name)
+                    continue
+
+                block_name = 'global_block_var_{}_block_invoke'.format(global_block_var_index + 1)
+                block_symbol = {
+                    "address": '0x{:x}'.format(block_addr - module_slide),
+                    "name": block_name
+                }
+                block_symbols.append(block_symbol)
+                block_dict[block_addr] = block_name
+                global_block_var_index += 1
+                # print('cache 0x{:x} {}'.format(block_addr, block_name))
+
+            output_block_addrs.clear()
+            global_block_var_addrs.clear()
 
         for index, block_addr in enumerate(block_addrs):
             if global_blocks.count(block_addr) > 0:
@@ -362,7 +429,21 @@ def find_all_blocks(debugger, command, result, internal_dict):
         if hits_count == 0:
             print("no block resolved")
 
-    result.AppendMessage("{} block(s) resolved".format(total_count))
+        file_dir = os.path.join(os.path.expanduser('~'), 'block_symbols', module_name)
+        try_mkdir(file_dir)
+        file_path = os.path.join(file_dir, 'block_symbol.json')
+        if len(block_symbols) > 0:
+            with open(file_path, 'w') as json_file:
+                json.dump(block_symbols, json_file, indent=2)
+                json_file.close()
+                print("block symbols have been written to {}".format(file_path))
+        else:
+            if os.path.exists(file_path):
+                os.remove(file_path)
+
+        block_symbols.clear()
+
+    result.AppendMessage("{} block(s) resolved.".format(total_count))
 
 
 def find_blocks(debugger, command, result, internal_dict):
@@ -942,7 +1023,12 @@ def break_blocks(debugger, command, result, internal_dict):
     result.AppendMessage("set {} breakpoints".format(total_count))
 
 
-def get_desc_for_address(addr):
+def try_mkdir(dir_path):
+    if not os.path.exists(dir_path):
+        os.makedirs(dir_path)
+
+
+def get_desc_for_address(addr, default_name=None, need_line=True):
     symbol = addr.GetSymbol()
 
     module = addr.GetModule()
@@ -952,15 +1038,20 @@ def get_desc_for_address(addr):
         module_path = module_file_spec.GetFilename()
         module_name = os.path.basename(module_path)
 
-    line_entry = addr.GetLineEntry()
-    if line_entry:
-        file_spec = line_entry.GetFileSpec()
-        file_path = file_spec.GetFilename()
-        file_name = os.path.basename(file_path)
-        return "{}`{} at {}:{}:{}".format(module_name, symbol.GetName(), file_name, line_entry.GetLine(),
-                                          line_entry.GetColumn())
+    if need_line:
+        line_entry = addr.GetLineEntry()
+        if line_entry:
+            file_spec = line_entry.GetFileSpec()
+            file_path = file_spec.GetFilename()
+            file_name = os.path.basename(file_path)
+            return "{}`{} at {}:{}:{}".format(module_name, symbol.GetName(), file_name, line_entry.GetLine(),
+                                              line_entry.GetColumn())
 
-    return "{}`{}".format(module_name, symbol.GetName())
+    sym_name = symbol.GetName()
+    if default_name and '___lldb_unnamed_symbol' in sym_name:
+        sym_name = default_name
+
+    return "{}`{}".format(module_name, sym_name)
 
 
 def get_blocks_info(debugger, module):
@@ -1081,7 +1172,6 @@ def get_blocks_info(debugger, module):
     void *globalBlock = &_NSConcreteGlobalBlock;
     void *stackBlock = &_NSConcreteStackBlock;
     NSMutableString *globalBlocks = [NSMutableString string];
-    uint64_t sec_offset = data_const_sec->offset - data_seg->fileoff;
     if (data_const_sec) {
         uint64_t sec_size = data_const_sec->size;
         int pointer_size = sizeof(void *);
@@ -1122,7 +1212,8 @@ def get_blocks_info(debugger, module):
         @"_NSConcreteGlobalBlock": [NSString stringWithFormat:@"%p", globalBlock],
         @"_NSConcreteStackBlock": [NSString stringWithFormat:@"%p", stackBlock],
         @"globalBlocks": globalBlocks,
-        @"stackBlockAddr": stackBlockAddr
+        @"stackBlockAddr": stackBlockAddr,
+        @"slide": @(slide)
     };
     
     NSData *json_data = [NSJSONSerialization dataWithJSONObject:block_info options:kNilOptions error:nil];
@@ -1167,7 +1258,7 @@ def generate_option_parser(proc, args=''):
 
 
 def generate_find_parser(proc):
-    usage = "usage: %prog block addr or block func ptr\n" + \
+    usage = "usage: %prog <block addr> or <block func ptr>\n" + \
         "Use block func ptr for stack block, Use block addr for global block"
 
     parser = optparse.OptionParser(usage=usage, prog=proc)
