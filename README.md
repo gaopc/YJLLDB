@@ -633,60 +633,66 @@ find a block: 0x100f18210 in JITDemo`-[ViewController touchesBegan:withEvent:]
 
 
 
-#### blocks - find global blocks
+#### blocks - find blocks
 
-Find global blocks in user modules.
+Find all blocks in user modules.
 
 ```stylus
 (lldb) blocks
 -----try look up block in JITDemo-----
-find a block: 0x100f18190 in JITDemo`-[ViewController touchesBegan:withEvent:]
-using global block: 0x100f18130 in JITDemo`-[ViewController touchesBegan:withEvent:]
-find a block: 0x100f181d0 in JITDemo`-[ViewController touchesBegan:withEvent:]
-find a block: 0x100f18210 in JITDemo`-[ViewController touchesBegan:withEvent:]
-find a block: 0x100f18170 in JITDemo`-[ViewController viewDidLoad]
------try look up block in AFNetworking-----
-find a block: 0x100f508d8 in AFNetworking`AFHTTPRequestSerializerObservedKeyPaths at once.h:85:3
-find a block: 0x100f50910 in AFNetworking`+[UIImage(AFNetworkingSafeImageLoading) af_safeImageWithData:] at once.h:85:3
-find a block: 0x100f50ad8 in AFNetworking`-[AFURLSessionManagerTaskDelegate URLSession:task:didCompleteWithError:] at once.h:85:3
-find a block: 0x100f50ab8 in AFNetworking`url_session_manager_completion_group at once.h:85:3
-find a block: 0x100f50bf8 in AFNetworking`-[WKWebView(_AFNetworking) sessionManager] at once.h:85:3
-find a block: 0x100f50c18 in AFNetworking`-[WKWebView(_AFNetworking) responseSerializer] at once.h:85:3
+* using global block var: 0x104a78150 in JITDemo`-[ViewController viewDidLoad] at ViewController.m:39:5
+find a block: 0x104a78190 in JITDemo`-[ViewController viewDidLoad] at ViewController.m:0:0
+find a block: 0x104a781b0 in JITDemo`-[ViewController touchesBegan:withEvent:] at ViewController.m:0:0
+* using global block var: 0x104a78150 in JITDemo`-[ViewController touchesBegan:withEvent:] at ViewController.m:69:5
+find a block: 0x104a781f0 in JITDemo`-[ViewController touchesBegan:withEvent:] at ViewController.m:0:0
+find a block: 0x104a78230 in JITDemo`-[ViewController touchesBegan:withEvent:] at ViewController.m:0:0
+find a stack block @0x104a74e7c in JITDemo`__41-[ViewController touchesBegan:withEvent:]_block_invoke_3 at ViewController.m:0:0
+	stack block func addr 0x104a74f08 JITDemo`__41-[ViewController touchesBegan:withEvent:]_block_invoke_4 at ViewController.m:75:0
+...
 -----try look up block in LLDBJIT-----
-find a block: 0x100fc41a0 in LLDBJIT`+[MachoTool findMacho]
-find a block: 0x100fc41e0 in LLDBJIT`+[MachoTool findMacho]
-find a block: 0x100fc4220 in LLDBJIT`+[Image dumpSegments:]
-find a block: 0x100fc4260 in LLDBJIT`+[Image dumpApp]
-15 block(s) resolved
+find a block: 0x104b341c0 in LLDBJIT`+[MachoTool findMacho] at MachoTool.m:0:0
+find a block: 0x104b34200 in LLDBJIT`+[MachoTool findMacho] at MachoTool.m:0:0
+find a block: 0x104b34240 in LLDBJIT`+[Image dumpSegments:] at Image.m:0:0
+find a block: 0x104b34280 in LLDBJIT`+[Image dumpApp] at Image.m:0:0
+find a stack block @0x104b2f2f4 in LLDBJIT`+[Image removeFile:] at Image.m:0:0
+	stack block func addr 0x104b2f788 LLDBJIT`__20+[Image removeFile:]_block_invoke at Image.m:746:0
+find a stack block @0x104b2fa3c in LLDBJIT`+[Image dump:slide:regions:] at Image.m:0:0
+	stack block func addr 0x104b30008 LLDBJIT`__28+[Image dump:slide:regions:]_block_invoke at Image.m:791:0
+find a stack block @0x104b32080 in LLDBJIT`+[Image getBlocksInfo:] at Image.m:0:0
+	stack block func addr 0x104b34d40 LLDBJIT`None
+85 block(s) resolved
 ```
 
 
 
-#### bblocks - break global blocks
+#### bblocks - break blocks
 
-Break global blocks in user modules
+Break all blocks in user modules
 
 ```stylus
 (lldb) bblocks
 -----try look up block in JITDemo-----
-break block: 0x100f18130 with Breakpoint 11: JITDemo`___lldb_unnamed_symbol73, address = 0x100f15494
-break block: 0x100f18170 with Breakpoint 12: JITDemo`___lldb_unnamed_symbol74, address = 0x100f15580
-break block: 0x100f18190 with Breakpoint 13: JITDemo`___lldb_unnamed_symbol75, address = 0x100f156d4
-break block: 0x100f181d0 with Breakpoint 14: JITDemo`___lldb_unnamed_symbol76, address = 0x100f156fc
-break block: 0x100f18210 with Breakpoint 15: JITDemo`___lldb_unnamed_symbol77, address = 0x100f15724
------try look up block in AFNetworking-----
-break block: 0x100f508d8 with Breakpoint 16: AFNetworking`__AFHTTPRequestSerializerObservedKeyPaths_block_invoke at AFURLRequestSerialization.m:177:0, address = 0x100f35a30
-break block: 0x100f50910 with Breakpoint 17: AFNetworking`__62+[UIImage(AFNetworkingSafeImageLoading) af_safeImageWithData:]_block_invoke at AFURLResponseSerialization.m:547:0, address = 0x100f377d0
-break block: 0x100f50ab8 with Breakpoint 18: AFNetworking`__url_session_manager_completion_group_block_invoke at AFURLSessionManager.m:38:0, address = 0x100f3d834
-break block: 0x100f50ad8 with Breakpoint 19: AFNetworking`__url_session_manager_processing_queue_block_invoke at AFURLSessionManager.m:28:0, address = 0x100f3d858
-break block: 0x100f50bf8 with Breakpoint 20: AFNetworking`__41-[WKWebView(AFNetworking) sessionManager]_block_invoke at WKWebView+AFNetworking.m:55:0, address = 0x100f4011c
-break block: 0x100f50c18 with Breakpoint 21: AFNetworking`__45-[WKWebView(AFNetworking) responseSerializer]_block_invoke at WKWebView+AFNetworking.m:71:0, address = 0x100f40274
+break block: 0x104a78150 with Breakpoint 4: JITDemo`globalBlock_block_invoke at ViewController.m:16:0, address = 0x104a74990
+break block: 0x104a78190 with Breakpoint 5: JITDemo`__29-[ViewController viewDidLoad]_block_invoke at ViewController.m:42:0, address = 0x104a74ac4
+break block: 0x104a781b0 with Breakpoint 6: JITDemo`__41-[ViewController touchesBegan:withEvent:]_block_invoke at ViewController.m:63:0, address = 0x104a74d1c
+break block: 0x104a781f0 with Breakpoint 7: JITDemo`__41-[ViewController touchesBegan:withEvent:]_block_invoke_2 at ViewController.m:72:0, address = 0x104a74d70
+break block: 0x104a78230 with Breakpoint 8: JITDemo`__41-[ViewController touchesBegan:withEvent:]_block_invoke_3 at ViewController.m:74:0, address = 0x104a74df8
+find a stack block @0x104a74e7c in JITDemo`__41-[ViewController touchesBegan:withEvent:]_block_invoke_3 at ViewController.m:0:0
+break stack block with Breakpoint 9: JITDemo`__41-[ViewController touchesBegan:withEvent:]_block_invoke_4 at ViewController.m:75:0, address = 0x104a74f08
+...
 -----try look up block in LLDBJIT-----
-break block: 0x100fc41a0 with Breakpoint 22: LLDBJIT`__22+[MachoTool findMacho]_block_invoke, address = 0x100fbe744
-break block: 0x100fc41e0 with Breakpoint 23: LLDBJIT`__22+[MachoTool findMacho]_block_invoke_2, address = 0x100fbe818
-break block: 0x100fc4220 with Breakpoint 24: LLDBJIT`__22+[Image dumpSegments:]_block_invoke, address = 0x100fbf2b4
-break block: 0x100fc4260 with Breakpoint 25: LLDBJIT`__16+[Image dumpApp]_block_invoke, address = 0x100fc02b4
-set 15 breakpoints
+break block: 0x104b341c0 with Breakpoint 82: LLDBJIT`__22+[MachoTool findMacho]_block_invoke at MachoTool.m:110:0, address = 0x104b2b130
+break block: 0x104b34200 with Breakpoint 83: LLDBJIT`__22+[MachoTool findMacho]_block_invoke_2 at MachoTool.m:140:0, address = 0x104b2b2d8
+break block: 0x104b34240 with Breakpoint 84: LLDBJIT`__22+[Image dumpSegments:]_block_invoke at Image.m:218:0, address = 0x104b2c724
+break block: 0x104b34280 with Breakpoint 85: LLDBJIT`__16+[Image dumpApp]_block_invoke at Image.m:545:0, address = 0x104b2e254
+find a stack block @0x104b2f2f4 in LLDBJIT`+[Image removeFile:] at Image.m:0:0
+break stack block with Breakpoint 86: LLDBJIT`__20+[Image removeFile:]_block_invoke at Image.m:746:0, address = 0x104b2f788
+find a stack block @0x104b2fa3c in LLDBJIT`+[Image dump:slide:regions:] at Image.m:0:0
+break stack block with Breakpoint 87: LLDBJIT`__28+[Image dump:slide:regions:]_block_invoke at Image.m:791:0, address = 0x104b30008
+find a stack block @0x104b32080 in LLDBJIT`+[Image getBlocksInfo:] at Image.m:0:0
+break stack block with Breakpoint 88: LLDBJIT`None, address = 0x104b34d40
+set 85 breakpoints
+(lldb) 
 ```
 
 or
@@ -694,12 +700,16 @@ or
 ```stylus
 (lldb) bblocks JITDemo
 -----try look up block in JITDemo-----
-break block: 0x100f18130 with Breakpoint 26: JITDemo`___lldb_unnamed_symbol73, address = 0x100f15494
-break block: 0x100f18170 with Breakpoint 27: JITDemo`___lldb_unnamed_symbol74, address = 0x100f15580
-break block: 0x100f18190 with Breakpoint 28: JITDemo`___lldb_unnamed_symbol75, address = 0x100f156d4
-break block: 0x100f181d0 with Breakpoint 29: JITDemo`___lldb_unnamed_symbol76, address = 0x100f156fc
-break block: 0x100f18210 with Breakpoint 30: JITDemo`___lldb_unnamed_symbol77, address = 0x100f15724
-set 5 breakpoints
+break block: 0x1026ac140 with Breakpoint 87: JITDemo`___lldb_unnamed_symbol75, address = 0x1026a92f4
+break block: 0x1026ac180 with Breakpoint 88: JITDemo`___lldb_unnamed_symbol76, address = 0x1026a93e0
+break block: 0x1026ac1a0 with Breakpoint 89: JITDemo`___lldb_unnamed_symbol77, address = 0x1026a9534
+break block: 0x1026ac1e0 with Breakpoint 90: JITDemo`___lldb_unnamed_symbol78, address = 0x1026a955c
+break block: 0x1026ac250 with Breakpoint 91: JITDemo`___lldb_unnamed_symbol82, address = 0x1026a964c
+find a stack block @0x1026a95a4 in JITDemo`___lldb_unnamed_symbol78
+break stack block with Breakpoint 92: JITDemo`___lldb_unnamed_symbol79, address = 0x1026a9610
+find a stack block @0x1026a9694 in JITDemo`___lldb_unnamed_symbol82
+break stack block with Breakpoint 93: JITDemo`___lldb_unnamed_symbol83, address = 0x1026a9700
+set 7 breakpoints
 ```
 
 

@@ -24,7 +24,7 @@ def __lldb_init_module(debugger, internal_dict):
 
 def find_all_blocks(debugger, command, result, internal_dict):
     """
-    find global blocks in user modules
+    find blocks in user modules
     """
     # 去掉转义符
     command = command.replace('\\', '\\\\')
@@ -687,7 +687,7 @@ def find_blocks(debugger, command, result, internal_dict):
 
 def break_blocks(debugger, command, result, internal_dict):
     """
-    find global blocks in user modules
+    break blocks in user modules
     """
     # 去掉转义符
     command = command.replace('\\', '\\\\')
