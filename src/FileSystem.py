@@ -3,7 +3,6 @@
 import lldb
 import optparse
 import shlex
-from enum import Enum
 import util
 
 
@@ -103,60 +102,69 @@ def ls_dir(debugger, dir_path):
     command_script = '@import Foundation;'
     command_script += 'NSString *dir_path = @"' + dir_path + '";'
     command_script += r'''
-    NSFileManager *fileManager = [NSFileManager defaultManager];
-    NSError *error = nil;
-    NSArray *files = (NSArray *)[fileManager contentsOfDirectoryAtPath:dir_path error:&error];
-    if (error) {
-        NSLog(@"%@", error);
-    }
     NSMutableString *result = [NSMutableString string];
-    for (NSString *name in files) {
-        if ([(NSString *)name isEqualToString:@".com.apple.mobile_container_manager.metadata.plist"]) {
-            continue;
-        }
-        NSString *fullpath = [dir_path stringByAppendingPathComponent:name];
-        NSDictionary *attrs = (id)[fileManager attributesOfItemAtPath:fullpath error:nil];
-        NSString *filetype = attrs[NSFileType];
-        NSString *type_str = nil;
-        if ([filetype isEqualToString:NSFileTypeDirectory]) {
-            type_str = @"d";
-        } else if ([filetype isEqualToString:NSFileTypeSymbolicLink]) {
-            type_str = @"l";
-        } else if ([filetype isEqualToString:NSFileTypeRegular]) {
-            type_str = @"-";
+    NSFileManager *fileManager = [NSFileManager defaultManager];
+    BOOL isDirectory = NO;
+    BOOL exists = [fileManager fileExistsAtPath:dir_path isDirectory:&isDirectory];
+    if (exists) {
+        NSArray *files = nil;
+        if (isDirectory) {
+            files = (NSArray *)[fileManager contentsOfDirectoryAtPath:dir_path error:nil];
         } else {
-            type_str = @"-";
+            files = @[dir_path.lastPathComponent];
+            dir_path = [dir_path stringByDeletingLastPathComponent];
         }
-        NSInteger permissions = (NSInteger)[(id)attrs[NSFilePosixPermissions] integerValue];
-        NSString *permissions_str = @"";
-        if (permissions == 0755) {
-            permissions_str = @"rwxr-xr-x";
-        } else if (permissions == 0644) {
-            permissions_str = @"rw-r--r--";
+        for (NSString *name in files) {
+            if ([(NSString *)name isEqualToString:@".com.apple.mobile_container_manager.metadata.plist"]) {
+                continue;
+            }
+            NSString *fullpath = [dir_path stringByAppendingPathComponent:name];
+            NSDictionary<NSFileAttributeKey, id> *attrs = [fileManager attributesOfItemAtPath:fullpath error:nil];
+            NSString *filetype = attrs[NSFileType];
+            NSString *type_str = nil;
+            if ([filetype isEqualToString:NSFileTypeDirectory]) {
+                type_str = @"d";
+            } else if ([filetype isEqualToString:NSFileTypeSymbolicLink]) {
+                type_str = @"l";
+            } else if ([filetype isEqualToString:NSFileTypeRegular]) {
+                type_str = @"-";
+            } else {
+                type_str = @"-";
+            }
+            NSInteger permissions = (NSInteger)[(id)attrs[NSFilePosixPermissions] integerValue];
+            NSString *permissions_str = @"";
+            if (permissions == 0755) {
+                permissions_str = @"rwxr-xr-x";
+            } else if (permissions == 0644) {
+                permissions_str = @"rw-r--r--";
+            } else {
+                NSLog(@"");
+            }
+            NSInteger file_size = (NSInteger)[(id)attrs[NSFileSize] integerValue];
+            
+            NSString *size_str = nil;
+            NSInteger KB = 1000;
+            NSInteger MB = KB * KB;
+            NSInteger GB = MB * KB;
+            if (file_size < KB) {
+                size_str = [NSString stringWithFormat:@"%10luB", file_size];
+            } else if (file_size < MB) {
+                size_str = [NSString stringWithFormat:@"%10.1fK", ((CGFloat)file_size) / KB];
+            } else if (file_size < GB) {
+                size_str = [NSString stringWithFormat:@"%10.1fM", ((CGFloat)file_size) / MB];
+            } else {
+                size_str = [NSString stringWithFormat:@"%10.1fG", ((CGFloat)file_size) / GB];
+            }
+            
+            NSDate *modificationDate = (id)attrs[(NSFileAttributeKey)NSFileModificationDate];
+            
+            [result appendFormat:@"%@%@ %@ %@ %@\n", type_str, permissions_str, size_str, modificationDate, name];
         }
-        NSInteger file_size = (NSInteger)[(id)attrs[NSFileSize] integerValue];
-        NSString *size_str = nil;
-        NSInteger KB = 1024;
-        NSInteger MB = KB * KB;
-        NSInteger GB = MB * KB;
-
-        if (file_size < KB) {
-            size_str = [NSString stringWithFormat:@"%10luB", file_size];
-        } else if (file_size < MB) {
-            size_str = [NSString stringWithFormat:@"%10.1fK", ((CGFloat)file_size) / KB];
-        } else if (file_size < GB) {
-            size_str = [NSString stringWithFormat:@"%10.1fM", ((CGFloat)file_size) / MB];
-        } else {
-            size_str = [NSString stringWithFormat:@"%10.1fG", ((CGFloat)file_size) / GB];
-        }
-        NSDate *modificationDate = (id)attrs[(NSFileAttributeKey)NSFileModificationDate];
-        [result appendFormat:@"%@%@ %@ %@ %@\n", type_str, permissions_str, size_str, modificationDate, name];
     }
-    
     result;
     '''
 
-    ret_str = exe_script(debugger, command_script)
+    ret_str = util.exe_script(debugger, command_script)
 
     return ret_str
 
@@ -204,7 +212,7 @@ def get_bundle_directory(debugger):
 
     path
     '''
-    ret_str = exe_script(debugger, command_script)
+    ret_str = util.exe_script(debugger, command_script)
 
     return ret_str
 
@@ -216,7 +224,7 @@ def get_home_directory(debugger):
 
     path
     '''
-    ret_str = exe_script(debugger, command_script)
+    ret_str = util.exe_script(debugger, command_script)
 
     return ret_str
 
@@ -228,7 +236,7 @@ def get_doc_directory(debugger):
 
     path
     '''
-    ret_str = exe_script(debugger, command_script)
+    ret_str = util.exe_script(debugger, command_script)
 
     return ret_str
 
@@ -240,7 +248,7 @@ def get_library_directory(debugger):
 
     path
     '''
-    ret_str = exe_script(debugger, command_script)
+    ret_str = util.exe_script(debugger, command_script)
 
     return ret_str
 
@@ -252,7 +260,7 @@ def get_tmp_directory(debugger):
 
     path
     '''
-    ret_str = exe_script(debugger, command_script)
+    ret_str = util.exe_script(debugger, command_script)
 
     return ret_str
 
@@ -264,7 +272,7 @@ def get_caches_directory(debugger):
 
     path
     '''
-    ret_str = exe_script(debugger, command_script)
+    ret_str = util.exe_script(debugger, command_script)
 
     return ret_str
 
@@ -450,7 +458,7 @@ def get_group_path(debugger):
     }
     group_path;
     '''
-    ret_str = exe_script(debugger, command_script)
+    ret_str = util.exe_script(debugger, command_script)
 
     return ret_str
 
