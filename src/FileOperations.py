@@ -19,7 +19,7 @@ def __lldb_init_module(debugger, internal_dict):
         'command script add -h "upload local file to remote device" -f '
         'FileOperations.upload_file ufile')
     debugger.HandleCommand(
-        'command script add -h "remove file on remote device" -f '
+        'command script add -h "remove file or directory on remote device" -f '
         'FileOperations.remove_file rm')
 
 
@@ -126,14 +126,14 @@ def upload_file(debugger, command, result, internal_dict):
 
 def remove_file(debugger, command, result, internal_dict):
     """
-    remove file on remote device
+    remove file or directory on remote device
     """
     # 去掉转义符
     command = command.replace('\\', '\\\\')
     # posix=False特殊符号处理相关，确保能够正确解析参数，因为OC方法前有-
     command_args = shlex.split(command, posix=False)
     # 创建parser
-    parser = generate_upload_parser('rm')
+    parser = generate_rm_parser('rm')
     # 解析参数，捕获异常
     try:
         # options是所有的选项，key-value形式，args是其余剩余所有参数，不包含options
@@ -459,6 +459,14 @@ def generate_option_parser(prog):
 
 def generate_upload_parser(prog):
     usage = "usage: %prog local_path remote_path\n"
+
+    parser = optparse.OptionParser(usage=usage, prog=prog)
+
+    return parser
+
+
+def generate_rm_parser(prog):
+    usage = "usage: %prog remote_path\n"
 
     parser = optparse.OptionParser(usage=usage, prog=prog)
 

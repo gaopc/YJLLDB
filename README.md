@@ -602,7 +602,7 @@ upload success
 
 #### rm - remove file
 
-Remove file on remote device.
+Remove file or directory on remote device.
 
 ```stylus
 (lldb) ls doc
@@ -764,3 +764,4 @@ set 2 breakpoints
 ## License
 
 `YJLLDB` is MIT-licensed. See `LICENSE`.
+
