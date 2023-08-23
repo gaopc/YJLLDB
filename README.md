@@ -36,9 +36,9 @@
 
 ​     \* [image_list](#image_list)
 
-​     \* [slookup - look up string](#slookup---look-up-string)
+​     \* [slookup - lookup string](#slookup---lookup-string)
 
-​     \* [blookup - look up bytes](#blookup---look-up-bytes)
+​     \* [blookup - lookup bytes](#blookup---lookup-bytes)
 
 ​     \* [patch](#patch)
 
@@ -392,7 +392,7 @@ index   load addr(slide)       vmsize path
 
 
 
-#### slookup - look up string
+#### slookup - lookup string
 
 Lookup the specified string, between start addr and end addr.
 
@@ -424,13 +424,13 @@ found at 0x184070f7c where = [0x000000018002cf78-0x000000018002cfb8) libSystem.B
 
 
 
-#### blookup - look up bytes
+#### blookup - lookup bytes
 
 Lookup the specified bytes in user modules.
 
 ```stylus
 (lldb) blookup c0 03 5f d6
------try lookup bytes in LLDBCode-----
+-----try to lookup bytes in LLDBCode-----
 0x104961018
 ...
 0x104969ab8
@@ -445,7 +445,7 @@ Patch the specified bytes in user modules.
 
 ```stylus
 (lldb) patch c0 03 5f d6
------try patch bytes in LLDBCode-----
+-----try to patch bytes in LLDBCode-----
 patch 32 locations
 ```
 
@@ -632,7 +632,7 @@ Find the specified block(s) in user modules.
 0x00000001043b9724,   ___lldb_unnamed_symbol77     <+0> `JITDemo`__TEXT.__text + 0x290
 
 (lldb) fblock 0x100f18210
------try look up block in JITDemo-----
+-----try to lookup block in JITDemo-----
 find a block: 0x100f18210 in JITDemo`-[ViewController touchesBegan:withEvent:]
 1 block(s) resolved
 ```
@@ -645,7 +645,7 @@ Find blocks in user modules and save block symbols to block_symbol.json
 
 ```stylus
 (lldb) blocks
------try look up block in JITDemo-----
+-----try to lookup block in JITDemo-----
 * using global block var: 0x104a78150 in JITDemo`-[ViewController viewDidLoad] at ViewController.m:39:5
 find a block: 0x104a78190 in JITDemo`-[ViewController viewDidLoad] at ViewController.m:0:0
 find a block: 0x104a781b0 in JITDemo`-[ViewController touchesBegan:withEvent:] at ViewController.m:0:0
@@ -655,7 +655,7 @@ find a block: 0x104a78230 in JITDemo`-[ViewController touchesBegan:withEvent:] a
 find a stack block @0x104a74e7c in JITDemo`__41-[ViewController touchesBegan:withEvent:]_block_invoke_3 at ViewController.m:0:0
 	stack block func addr 0x104a74f08 JITDemo`__41-[ViewController touchesBegan:withEvent:]_block_invoke_4 at ViewController.m:75:0
 ...
------try look up block in LLDBJIT-----
+-----try to lookup block in LLDBJIT-----
 find a block: 0x104b341c0 in LLDBJIT`+[MachoTool findMacho] at MachoTool.m:0:0
 find a block: 0x104b34200 in LLDBJIT`+[MachoTool findMacho] at MachoTool.m:0:0
 find a block: 0x104b34240 in LLDBJIT`+[Image dumpSegments:] at Image.m:0:0
@@ -677,7 +677,7 @@ Break all blocks in user modules
 
 ```stylus
 (lldb) bblocks
------try look up block in JITDemo-----
+-----try to lookup block in JITDemo-----
 break block: 0x104a78150 with Breakpoint 4: JITDemo`globalBlock_block_invoke at ViewController.m:16:0, address = 0x104a74990
 break block: 0x104a78190 with Breakpoint 5: JITDemo`__29-[ViewController viewDidLoad]_block_invoke at ViewController.m:42:0, address = 0x104a74ac4
 break block: 0x104a781b0 with Breakpoint 6: JITDemo`__41-[ViewController touchesBegan:withEvent:]_block_invoke at ViewController.m:63:0, address = 0x104a74d1c
@@ -686,7 +686,7 @@ break block: 0x104a78230 with Breakpoint 8: JITDemo`__41-[ViewController touches
 find a stack block @0x104a74e7c in JITDemo`__41-[ViewController touchesBegan:withEvent:]_block_invoke_3 at ViewController.m:0:0
 break stack block with Breakpoint 9: JITDemo`__41-[ViewController touchesBegan:withEvent:]_block_invoke_4 at ViewController.m:75:0, address = 0x104a74f08
 ...
------try look up block in LLDBJIT-----
+-----try to lookup block in LLDBJIT-----
 break block: 0x104b341c0 with Breakpoint 82: LLDBJIT`__22+[MachoTool findMacho]_block_invoke at MachoTool.m:110:0, address = 0x104b2b130
 break block: 0x104b34200 with Breakpoint 83: LLDBJIT`__22+[MachoTool findMacho]_block_invoke_2 at MachoTool.m:140:0, address = 0x104b2b2d8
 break block: 0x104b34240 with Breakpoint 84: LLDBJIT`__22+[Image dumpSegments:]_block_invoke at Image.m:218:0, address = 0x104b2c724
@@ -705,7 +705,7 @@ or
 
 ```stylus
 (lldb) bblocks JITDemo
------try look up block in JITDemo-----
+-----try to lookup block in JITDemo-----
 break block: 0x1026ac140 with Breakpoint 87: JITDemo`___lldb_unnamed_symbol75, address = 0x1026a92f4
 break block: 0x1026ac180 with Breakpoint 88: JITDemo`___lldb_unnamed_symbol76, address = 0x1026a93e0
 break block: 0x1026ac1a0 with Breakpoint 89: JITDemo`___lldb_unnamed_symbol77, address = 0x1026a9534
