@@ -714,6 +714,30 @@ set 7 breakpoints
 
 
 
+#### initfunc
+
+Dump module init function(s) in user modules.
+
+```stylus
+(lldb) initfunc
+-----try to lookup init function in JITDemo-----
+address = 0x100e08cb0 JITDemo`entry1 at main.m:708:0
+address = 0x100e0960c JITDemo`entry2 at main.m:740:0
+```
+
+
+
+#### binitfunc
+
+```stylus
+(lldb) binitfunc
+-----try to lookup init function in JITDemo-----
+Breakpoint 6: JITDemo`entry1 at main.m:708:0, address = 0x100e08cb0
+Breakpoint 7: JITDemo`entry2 at main.m:740:0, address = 0x100e0960c
+```
+
+
+
 ## License
 
 `YJLLDB` is MIT-licensed. See `LICENSE`.
