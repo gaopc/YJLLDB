@@ -64,6 +64,12 @@
 
 ​     \* [bblocks - break global blocks](#bblocks---break-global-blocks)
 
+​     \* [initfunc - print mod init func](#initfunc---print-mod-init-func)
+
+​     \* [binitfunc - break mod init func](#binitfunc---break-mod-init-func)
+
+​     \* [bmethod - break method](#bmethod---break-method)
+
 ## Installation
 
 1. Clone this repo
@@ -714,7 +720,7 @@ set 7 breakpoints
 
 
 
-#### initfunc
+#### initfunc - print mod init func
 
 Dump module init function(s) in user modules.
 
@@ -727,13 +733,30 @@ address = 0x100e0960c JITDemo`entry2 at main.m:740:0
 
 
 
-#### binitfunc
+#### binitfunc - break mod init func
+
+Break module init function(s) in user modules.
 
 ```stylus
 (lldb) binitfunc
 -----try to lookup init function in JITDemo-----
 Breakpoint 6: JITDemo`entry1 at main.m:708:0, address = 0x100e08cb0
 Breakpoint 7: JITDemo`entry2 at main.m:740:0, address = 0x100e0960c
+```
+
+
+
+#### bmethod - break method
+
+Break the specified method(s) in user modules
+
+```stylus
+(lldb) bmethod load
+-----try to method in JITDemo-----
+Breakpoint 3: JITDemo`+[ViewController load] at ViewController.m:26:0, address = 0x1024f89bc
+Breakpoint 4: JITDemo`+[AppDelegate load] at AppDelegate.m:16:0, address = 0x1024f96a4
+-----try to method in LLDBJIT-----
+set 2 breakpoints
 ```
 
 
