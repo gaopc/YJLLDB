@@ -42,7 +42,7 @@ def lookup_bytes(debugger, command, result, internal_dict):
     bytes_len = len(bytes_list)
     input_bytes = bytes(bytes_list)
 
-    print('look up bytes, this may take a while')
+    print('lookup bytes, this may take a while')
     target = debugger.GetSelectedTarget()
     bundle_path = target.GetExecutable().GetDirectory()
     total_count = 0
@@ -58,7 +58,7 @@ def lookup_bytes(debugger, command, result, internal_dict):
             continue
 
         hits_count = 0
-        result.AppendMessage("-----try lookup bytes in %s-----" % name)
+        result.AppendMessage("-----try to lookup bytes in %s-----" % name)
         for seg in module.section_iter():
             seg_name = seg.GetName()
             if seg_name != "__TEXT":

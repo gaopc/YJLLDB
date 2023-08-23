@@ -67,7 +67,7 @@ def find_all_blocks(debugger, command, result, internal_dict):
         if module_name.startswith('libswift'):
             continue
 
-        print("-----try look up block in %s-----" % module_name)
+        print("-----try to lookup block in %s-----" % module_name)
         blocks_info_str = get_blocks_info(debugger, module_name)
         if not blocks_info_str:
             continue
@@ -498,7 +498,7 @@ def find_blocks(debugger, command, result, internal_dict):
         if name.startswith('libswift'):
             continue
 
-        print("-----try look up block in %s-----" % name)
+        print("-----try to lookup block in %s-----" % name)
         blocks_info_str = get_blocks_info(debugger, name)
         if not blocks_info_str:
             continue
@@ -807,7 +807,7 @@ def break_blocks(debugger, command, result, internal_dict):
         if len(module_list) and name not in module_list:
             continue
 
-        print("-----try look up block in %s-----" % name)
+        print("-----try to lookup block in %s-----" % name)
         blocks_info_str = get_blocks_info(debugger, name)
         if not blocks_info_str:
             continue

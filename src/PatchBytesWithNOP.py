@@ -45,7 +45,7 @@ def patch_bytes_with_nop(debugger, command, result, internal_dict):
 
     input_bytes = bytes(bytes_list)
 
-    print('look up bytes, this may take a while')
+    print('lookup bytes, this may take a while')
     nop_bytes = b'\x1f\x20\x03\xd5'
     loop_count = int(bytes_len / 4)
     target = debugger.GetSelectedTarget()
@@ -64,7 +64,7 @@ def patch_bytes_with_nop(debugger, command, result, internal_dict):
             continue
 
         hits_count = 0
-        result.AppendMessage("-----try patch bytes in %s-----" % name)
+        result.AppendMessage("-----try to patch bytes in %s-----" % name)
         for seg in module.section_iter():
             seg_name = seg.GetName()
             if seg_name != "__TEXT":

@@ -42,7 +42,7 @@ def break_at_bytes(debugger, command, result, internal_dict):
     bytes_len = len(bytes_list)
     input_bytes = bytes(bytes_list)
 
-    print('look up bytes, this may take a while')
+    print('lookup bytes, this may take a while')
     target = debugger.GetSelectedTarget()
     bundle_path = target.GetExecutable().GetDirectory()
     brkpoint_count = 0
@@ -58,7 +58,7 @@ def break_at_bytes(debugger, command, result, internal_dict):
             continue
 
         hits_count = 0
-        result.AppendMessage("-----try set breakpoint at %s-----" % name)
+        result.AppendMessage("-----try to set breakpoint at %s-----" % name)
         for seg in module.section_iter():
             seg_name = seg.GetName()
             if seg_name != "__TEXT":
