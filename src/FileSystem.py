@@ -4,6 +4,7 @@ import lldb
 import optparse
 import shlex
 from enum import Enum
+import util
 
 
 def __lldb_init_module(debugger, internal_dict):
@@ -452,28 +453,6 @@ def get_group_path(debugger):
     ret_str = exe_script(debugger, command_script)
 
     return ret_str
-
-
-def exe_script(debugger, command_script):
-    res = lldb.SBCommandReturnObject()
-    interpreter = debugger.GetCommandInterpreter()
-    interpreter.HandleCommand('exp -l objc -O -- ' + command_script, res)
-
-    if not res.HasResult():
-        print('execute JIT code failed:\n{}'.format(res.GetError()))
-        return ''
-
-    response = res.GetOutput()
-
-    response = response.strip()
-    # 末尾有两个\n
-    if response.endswith('\n\n'):
-        response = response[:-2]
-    # 末尾有一个\n
-    if response.endswith('\n'):
-        response = response[:-1]
-
-    return response
 
 
 def generate_option_parser():

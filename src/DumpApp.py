@@ -7,6 +7,7 @@ import shlex
 import os.path
 import shutil
 import subprocess
+import util
 
 script_dir = os.path.dirname(os.path.realpath(__file__))
 
@@ -37,7 +38,7 @@ def dump_app(debugger, command, result, internal_dict):
         return
 
     output_dir = os.path.expanduser('~') + '/lldb_dump_macho'
-    try_mkdir(output_dir)
+    util.try_mkdir(output_dir)
 
     app_info_str = get_app_regions(debugger)
     if app_info_str:
@@ -70,8 +71,8 @@ def dump_app_with_info(debugger, app_info, output_dir):
     datas_dir = '{}/datas'.format(work_dir)
     if os.path.exists(work_dir):
         shutil.rmtree(work_dir)
-    try_mkdir(work_dir)
-    try_mkdir(datas_dir)
+    util.try_mkdir(work_dir)
+    util.try_mkdir(datas_dir)
 
     app_info_write_to_file(app_info, datas_dir)
 
@@ -84,7 +85,7 @@ def dump_app_with_info(debugger, app_info, output_dir):
         print("copy file {}.app{}".format(app_name, rel_path))
         output_filepath = output_app_path + rel_path
         directory = os.path.dirname(output_filepath)
-        try_mkdir(directory)
+        util.try_mkdir(directory)
 
         data_info = file["data_info"]
         comps = data_info.split('-')
@@ -135,11 +136,6 @@ def dump_app_with_info(debugger, app_info, output_dir):
     return app_name, work_dir, output_app_path
 
 
-def try_mkdir(dir_path):
-    if not os.path.exists(dir_path):
-        os.makedirs(dir_path)
-
-
 def app_info_write_to_file(module_info, module_dir):
     module_name = module_info["app_name"].replace(' ', '_')
     json_file_path = module_dir + '/' + module_name + '.json'
@@ -153,7 +149,7 @@ def create_ipa(work_dir, display_name, os_version):
     app_name = display_name + '.app'
     payload_dir = 'Payload'
     payload_path = os.path.join(work_dir, payload_dir)
-    try_mkdir(payload_path)
+    util.try_mkdir(payload_path)
 
     print('creating "{}"'.format(ipa_filename))
     success = False
@@ -337,31 +333,9 @@ def get_app_regions(debugger):
     json_str;
     '''
 
-    ret_str = exe_script(debugger, command_script)
+    ret_str = util.exe_script(debugger, command_script)
 
     return ret_str
-
-
-def exe_script(debugger, command_script):
-    res = lldb.SBCommandReturnObject()
-    interpreter = debugger.GetCommandInterpreter()
-    interpreter.HandleCommand('exp -l objc -O -- ' + command_script, res)
-
-    if not res.HasResult():
-        print('execute JIT code failed:\n{}'.format(res.GetError()))
-        return ''
-
-    response = res.GetOutput()
-
-    response = response.strip()
-    # 末尾有两个\n
-    if response.endswith('\n\n'):
-        response = response[:-2]
-    # 末尾有一个\n
-    if response.endswith('\n'):
-        response = response[:-1]
-
-    return response
 
 
 def generate_option_parser(prog):

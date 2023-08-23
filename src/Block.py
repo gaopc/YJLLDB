@@ -6,6 +6,7 @@ import shlex
 import os
 import re
 import json
+import util
 
 
 def __lldb_init_module(debugger, internal_dict):
@@ -221,7 +222,7 @@ def find_all_blocks(debugger, command, result, internal_dict):
                     target_addr = adr_addr + adr_offset
                     if stack_block_found:
                         print('\tstack block func addr 0x{:x} {}'.
-                              format(target_addr, get_desc_for_address(target.ResolveLoadAddress(target_addr))))
+                              format(target_addr, util.get_desc_for_address(target.ResolveLoadAddress(target_addr))))
                         output_block_addrs.append(target_addr)
                         stack_block_found = False
                     else:
@@ -230,7 +231,7 @@ def find_all_blocks(debugger, command, result, internal_dict):
                         try:
                             idx = block_addrs.index(target_addr)
                             print('find a block: 0x{:x} in {}'.
-                                  format(target_addr, get_desc_for_address(next_ins_addr)))
+                                  format(target_addr, util.get_desc_for_address(next_ins_addr)))
                             block_addrs.remove(target_addr)
                             block_func_ptr = block_funcs[idx]
                             block_funcs.remove(block_func_ptr)
@@ -258,7 +259,7 @@ def find_all_blocks(debugger, command, result, internal_dict):
 
                     if stack_block_found:
                         print('\tstack block func addr 0x{:x} {}'.
-                              format(target_addr, get_desc_for_address(target.ResolveLoadAddress(target_addr))))
+                              format(target_addr, util.get_desc_for_address(target.ResolveLoadAddress(target_addr))))
                         output_block_addrs.append(target_addr)
                         stack_block_found = False
                     else:
@@ -267,7 +268,7 @@ def find_all_blocks(debugger, command, result, internal_dict):
                         try:
                             idx = block_addrs.index(target_addr)
                             print('find a block: 0x{:x} in {}'.
-                                  format(target_addr, get_desc_for_address(next_ins_addr)))
+                                  format(target_addr, util.get_desc_for_address(next_ins_addr)))
                             block_addrs.remove(target_addr)
                             block_func_ptr = block_funcs[idx]
                             block_funcs.remove(block_func_ptr)
@@ -315,7 +316,7 @@ def find_all_blocks(debugger, command, result, internal_dict):
                             # print('target_addr: 0x{:x} {}'.format(target_addr, next_ins_addr))
                             if target_addr == stack_block_isa:
                                 print('find a stack block @0x{:x} in {}'.
-                                      format(next_ins_addr.GetLoadAddress(target), get_desc_for_address(next_ins_addr, sym_name)))
+                                      format(next_ins_addr.GetLoadAddress(target), util.get_desc_for_address(next_ins_addr, sym_name)))
                                 hits_count += 1
                                 total_count += 1
                                 stack_block_found = True
@@ -323,7 +324,7 @@ def find_all_blocks(debugger, command, result, internal_dict):
                                 try:
                                     idx = block_addrs.index(target_addr)
                                     print('* using global block var: 0x{:x} in {}'.
-                                          format(target_addr, get_desc_for_address(next_ins_addr)))
+                                          format(target_addr, util.get_desc_for_address(next_ins_addr)))
 
                                     if global_blocks.count(target_addr) == 0:
                                         hits_count += 1
@@ -347,7 +348,7 @@ def find_all_blocks(debugger, command, result, internal_dict):
                             addr = next_ins_loadaddr + ldr_offset
                             if addr == stack_block_addr:
                                 print('find a stack block @0x{:x} in {}'.
-                                      format(next_ins_loadaddr, get_desc_for_address(next_ins_addr, sym_name)))
+                                      format(next_ins_loadaddr, util.get_desc_for_address(next_ins_addr, sym_name)))
                                 hits_count += 1
                                 total_count += 1
                                 stack_block_found = True
@@ -358,7 +359,7 @@ def find_all_blocks(debugger, command, result, internal_dict):
                                     addr_value = process.ReadPointerFromMemory(maybe_block, error)
                                     if addr_value == global_block_isa:
                                         print('+ using global block var: 0x{:x} in {}'.
-                                              format(maybe_block, get_desc_for_address(next_ins_addr)))
+                                              format(maybe_block, util.get_desc_for_address(next_ins_addr)))
                                         if global_blocks.count(maybe_block) == 0:
                                             hits_count += 1
                                             total_count += 1
@@ -378,7 +379,7 @@ def find_all_blocks(debugger, command, result, internal_dict):
 
             for index, block_addr in enumerate(output_block_addrs):
                 func_addr = target.ResolveLoadAddress(block_addr)
-                block_name = get_desc_for_address(func_addr, False)
+                block_name = util.get_desc_for_address(func_addr, False)
                 # 有符号的block不记录，保持原符号
                 if '___lldb_unnamed_symbol' not in block_name:
                     # print(block_name)
@@ -400,7 +401,7 @@ def find_all_blocks(debugger, command, result, internal_dict):
 
             for block_addr in global_block_var_addrs:
                 func_addr = target.ResolveLoadAddress(block_addr)
-                block_name = get_desc_for_address(func_addr, False)
+                block_name = util.get_desc_for_address(func_addr, False)
                 # 有符号的block不记录，保持原符号
                 if '___lldb_unnamed_symbol' not in block_name:
                     # print(block_name)
@@ -424,13 +425,13 @@ def find_all_blocks(debugger, command, result, internal_dict):
                 continue
             block_func = block_funcs[index]
             func_addr = target.ResolveLoadAddress(block_func)
-            print('unresolved block: 0x{:x} in {}'.format(block_addr, get_desc_for_address(func_addr)))
+            print('unresolved block: 0x{:x} in {}'.format(block_addr, util.get_desc_for_address(func_addr)))
 
         if hits_count == 0:
             print("no block resolved")
 
         file_dir = os.path.join(os.path.expanduser('~'), 'block_symbols', module_name)
-        try_mkdir(file_dir)
+        util.try_mkdir(file_dir)
         file_path = os.path.join(file_dir, 'block_symbol.json')
         if len(block_symbols) > 0:
             with open(file_path, 'w') as json_file:
@@ -472,9 +473,9 @@ def find_blocks(debugger, command, result, internal_dict):
         all_addr_list = []
         for arg in args:
             value = int(arg, 16)
-            if value % 8:
-                print('0x{:x} could not be a block object'.format(value))
-                continue
+            # if value % 8:
+            #     print('0x{:x} could not be a block object'.format(value))
+            #     continue
 
             all_addr_list.append(value)
 
@@ -609,7 +610,7 @@ def find_blocks(debugger, command, result, internal_dict):
                         try:
                             idx = addr_list.index(target_addr)
                             print('find a block: 0x{:x} in {}'.
-                                  format(target_addr, get_desc_for_address(next_ins_addr)))
+                                  format(target_addr, util.get_desc_for_address(next_ins_addr)))
                             addr_list.remove(target_addr)
                             total_count += 1
                             block_found = True
@@ -649,7 +650,7 @@ def find_blocks(debugger, command, result, internal_dict):
                         try:
                             idx = addr_list.index(target_addr)
                             print('find a block: 0x{:x} in {}'.
-                                  format(target_addr, get_desc_for_address(next_ins_addr)))
+                                  format(target_addr, util.get_desc_for_address(next_ins_addr)))
                             addr_list.remove(target_addr)
                             total_count += 1
                             block_found = True
@@ -694,14 +695,14 @@ def find_blocks(debugger, command, result, internal_dict):
                             # print('target_addr: 0x{:x} {}'.format(target_addr, next_ins_addr))
                             if target_addr == stack_block_isa:
                                 stack_block_des = 'find a stack block @0x{:x} in {}'.\
-                                    format(next_ins_addr.GetLoadAddress(target), get_desc_for_address(next_ins_addr))
+                                    format(next_ins_addr.GetLoadAddress(target), util.get_desc_for_address(next_ins_addr))
                                 # print(stack_block_des)
                                 stack_block_found = True
                             else:
                                 try:
                                     idx = addr_list.index(target_addr)
                                     print('* using global block var: 0x{:x} in {}'.
-                                          format(target_addr, get_desc_for_address(next_ins_addr)))
+                                          format(target_addr, util.get_desc_for_address(next_ins_addr)))
 
                                     if global_blocks.count(target_addr) == 0:
                                         total_count += 1
@@ -723,7 +724,7 @@ def find_blocks(debugger, command, result, internal_dict):
                             addr = next_ins_loadaddr + ldr_offset
                             if addr == stack_block_addr:
                                 stack_block_des = 'find a stack block @0x{:x} in {}'. \
-                                    format(next_ins_addr.GetLoadAddress(target), get_desc_for_address(next_ins_addr))
+                                    format(next_ins_addr.GetLoadAddress(target), util.get_desc_for_address(next_ins_addr))
                                 # print(stack_block_des)
                                 stack_block_found = True
                             else:
@@ -733,7 +734,7 @@ def find_blocks(debugger, command, result, internal_dict):
                                     addr_value = process.ReadPointerFromMemory(maybe_block, error)
                                     if addr_value == global_block_isa and maybe_block in all_addr_list:
                                         print('+ using global block var: 0x{:x} in {}'.
-                                              format(maybe_block, get_desc_for_address(next_ins_addr)))
+                                              format(maybe_block, util.get_desc_for_address(next_ins_addr)))
                                         if global_blocks.count(maybe_block) == 0:
                                             total_count += 1
                                             global_blocks.append(maybe_block)
@@ -841,7 +842,7 @@ def break_blocks(debugger, command, result, internal_dict):
             else:
                 total_count += 1
                 print("break block: 0x{:x} with Breakpoint {}: {}, address = 0x{:x}"
-                      .format(block_addr, brkpoint.GetID(), get_desc_for_address(block_func_addr), block_func)
+                      .format(block_addr, brkpoint.GetID(), util.get_desc_for_address(block_func_addr), block_func)
                       )
 
         for symbol in module:
@@ -901,7 +902,7 @@ def break_blocks(debugger, command, result, internal_dict):
                     target_addr = adr_addr + adr_offset
                     if stack_block_found:
                         # print('\tstack block func addr 0x{:x} {}'.
-                        #       format(target_addr, get_desc_for_address(target.ResolveLoadAddress(target_addr))))
+                        #       format(target_addr, util.get_desc_for_address(target.ResolveLoadAddress(target_addr))))
                         stack_block_found = False
                         if target_addr in stack_blocks:
                             print("ignore stack block 0x{:x}".format(target_addr))
@@ -915,7 +916,7 @@ def break_blocks(debugger, command, result, internal_dict):
                         else:
                             total_count += 1
                             print("break stack block with Breakpoint {}: {}, address = 0x{:x}"
-                                  .format(brkpoint.GetID(), get_desc_for_address(block_func_addr), target_addr)
+                                  .format(brkpoint.GetID(), util.get_desc_for_address(block_func_addr), target_addr)
                                   )
                             stack_blocks.append(target_addr)
                 elif next_ins.GetMnemonic(target) == 'adrp':
@@ -937,7 +938,7 @@ def break_blocks(debugger, command, result, internal_dict):
 
                     if stack_block_found:
                         # print('\tstack block func addr 0x{:x} {}'.
-                        #       format(target_addr, get_desc_for_address(target.ResolveLoadAddress(target_addr))))
+                        #       format(target_addr, util.get_desc_for_address(target.ResolveLoadAddress(target_addr))))
                         stack_block_found = False
                         if target_addr in stack_blocks:
                             print("ignore stack block 0x{:x}".format(target_addr))
@@ -951,7 +952,7 @@ def break_blocks(debugger, command, result, internal_dict):
                         else:
                             total_count += 1
                             print("break stack block with Breakpoint {}: {}, address = 0x{:x}"
-                                  .format(brkpoint.GetID(), get_desc_for_address(block_func_addr), target_addr)
+                                  .format(brkpoint.GetID(), util.get_desc_for_address(block_func_addr), target_addr)
                                   )
                             stack_blocks.append(target_addr)
 
@@ -993,7 +994,7 @@ def break_blocks(debugger, command, result, internal_dict):
                             # print('target_addr: 0x{:x} {}'.format(target_addr, next_ins_addr))
                             if target_addr == stack_block_isa:
                                 print('find a stack block @0x{:x} in {}'.
-                                      format(next_ins_addr.GetLoadAddress(target), get_desc_for_address(next_ins_addr)))
+                                      format(next_ins_addr.GetLoadAddress(target), util.get_desc_for_address(next_ins_addr)))
                                 stack_block_found = True
 
                         adrp_ins = None
@@ -1009,7 +1010,7 @@ def break_blocks(debugger, command, result, internal_dict):
                             addr = next_ins_loadaddr + ldr_offset
                             if addr == stack_block_addr:
                                 print('find a stack block @0x{:x} in {}'.
-                                      format(next_ins_loadaddr, get_desc_for_address(next_ins_addr)))
+                                      format(next_ins_loadaddr, util.get_desc_for_address(next_ins_addr)))
                                 stack_block_found = True
 
                 elif adrp_ins and next_ins.GetMnemonic(target) == 'str':
@@ -1021,37 +1022,6 @@ def break_blocks(debugger, command, result, internal_dict):
                     adrp_ins = None
 
     result.AppendMessage("set {} breakpoints".format(total_count))
-
-
-def try_mkdir(dir_path):
-    if not os.path.exists(dir_path):
-        os.makedirs(dir_path)
-
-
-def get_desc_for_address(addr, default_name=None, need_line=True):
-    symbol = addr.GetSymbol()
-
-    module = addr.GetModule()
-    module_name = "unknown"
-    if module:
-        module_file_spec = module.GetFileSpec()
-        module_path = module_file_spec.GetFilename()
-        module_name = os.path.basename(module_path)
-
-    if need_line:
-        line_entry = addr.GetLineEntry()
-        if line_entry:
-            file_spec = line_entry.GetFileSpec()
-            file_path = file_spec.GetFilename()
-            file_name = os.path.basename(file_path)
-            return "{}`{} at {}:{}:{}".format(module_name, symbol.GetName(), file_name, line_entry.GetLine(),
-                                              line_entry.GetColumn())
-
-    sym_name = symbol.GetName()
-    if default_name and '___lldb_unnamed_symbol' in sym_name:
-        sym_name = default_name
-
-    return "{}`{}".format(module_name, sym_name)
 
 
 def get_blocks_info(debugger, module):
@@ -1222,31 +1192,9 @@ def get_blocks_info(debugger, module):
     json_str;
     '''
 
-    ret_str = exe_script(debugger, command_script)
+    ret_str = util.exe_script(debugger, command_script)
 
     return ret_str
-
-
-def exe_script(debugger, command_script):
-    res = lldb.SBCommandReturnObject()
-    interpreter = debugger.GetCommandInterpreter()
-    interpreter.HandleCommand('exp -l objc -O -- ' + command_script, res)
-
-    if not res.HasResult():
-        print('execute JIT code failed: \n{}'.format(res.GetError()))
-        return ''
-
-    response = res.GetOutput()
-
-    response = response.strip()
-    # 末尾有两个\n
-    if response.endswith('\n\n'):
-        response = response[:-2]
-    # 末尾有一个\n
-    if response.endswith('\n'):
-        response = response[:-1]
-
-    return response
 
 
 def generate_option_parser(proc, args=''):

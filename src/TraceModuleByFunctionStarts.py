@@ -4,6 +4,7 @@ import lldb
 import optparse
 import shlex
 import os
+import util
 
 extra_offset = 0
 base_num_frames = 0
@@ -186,27 +187,6 @@ def trace_all_functions_in_module(debugger, command, result, internal_dict):
         result.AppendMessage("module {} not found".format(lookup_module_name))
 
 
-def get_desc_for_address(addr):
-    symbol = addr.GetSymbol()
-
-    module = addr.GetModule()
-    module_name = "unknown"
-    if module:
-        module_file_spec = module.GetFileSpec()
-        module_path = module_file_spec.GetFilename()
-        module_name = os.path.basename(module_path)
-
-    line_entry = addr.GetLineEntry()
-    if line_entry:
-        file_spec = line_entry.GetFileSpec()
-        file_path = file_spec.GetFilename()
-        file_name = os.path.basename(file_path)
-        return "{}`{} at {}:{}:{}".format(module_name, symbol.GetName(), file_name, line_entry.GetLine(),
-                                          line_entry.GetColumn())
-
-    return "{}`{}".format(module_name, symbol.GetName())
-
-
 def breakpoint_handler(frame, bp_loc, dict):
     global oneshot
     if oneshot:
@@ -263,7 +243,7 @@ def breakpoint_handler(frame, bp_loc, dict):
         call_num = 0
 
         addr = bp_loc.GetAddress()
-        desc = get_desc_for_address(addr)
+        desc = util.get_desc_for_address(addr)
         offset = current_num_frames - base_num_frames + extra_offset
         if offset == 0:
             print('call {}'.format(desc))
@@ -412,31 +392,9 @@ def get_function_starts(debugger, module):
     addresses;
     '''
 
-    ret_str = exe_script(debugger, command_script)
+    ret_str = util.exe_script(debugger, command_script)
 
     return ret_str
-
-
-def exe_script(debugger, command_script):
-    res = lldb.SBCommandReturnObject()
-    interpreter = debugger.GetCommandInterpreter()
-    interpreter.HandleCommand('exp -l objc -O -- ' + command_script, res)
-
-    if not res.HasResult():
-        print('execute JIT code failed:\n{}'.format(res.GetError()))
-        return ''
-
-    response = res.GetOutput()
-
-    response = response.strip()
-    # 末尾有两个\n
-    if response.endswith('\n\n'):
-        response = response[:-2]
-    # 末尾有一个\n
-    if response.endswith('\n'):
-        response = response[:-1]
-
-    return response
 
 
 def generate_option_parser():

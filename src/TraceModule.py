@@ -4,6 +4,7 @@ import lldb
 import optparse
 import shlex
 import os
+import util
 
 extra_offset = 0
 base_num_frames = 0
@@ -175,27 +176,6 @@ def trace_all_functions_in_module(debugger, command, result, internal_dict):
         result.AppendMessage("module {} not found".format(lookup_module_name))
 
 
-def get_desc_for_address(addr):
-    symbol = addr.GetSymbol()
-
-    module = addr.GetModule()
-    module_name = "unknown"
-    if module:
-        module_file_spec = module.GetFileSpec()
-        module_path = module_file_spec.GetFilename()
-        module_name = os.path.basename(module_path)
-
-    line_entry = addr.GetLineEntry()
-    if line_entry:
-        file_spec = line_entry.GetFileSpec()
-        file_path = file_spec.GetFilename()
-        file_name = os.path.basename(file_path)
-        return "{}`{} at {}:{}:{}".format(module_name, symbol.GetName(), file_name, line_entry.GetLine(),
-                                          line_entry.GetColumn())
-
-    return "{}`{}".format(module_name, symbol.GetName())
-
-
 def breakpoint_handler(frame, bp_loc, dict):
     global oneshot
     if oneshot:
@@ -252,7 +232,7 @@ def breakpoint_handler(frame, bp_loc, dict):
         call_num = 0
 
         addr = bp_loc.GetAddress()
-        desc = get_desc_for_address(addr)
+        desc = util.get_desc_for_address(addr)
         offset = current_num_frames - base_num_frames + extra_offset
         if offset == 0:
             print('call {}'.format(desc))

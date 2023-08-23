@@ -5,6 +5,7 @@ import lldb
 import optparse
 import shlex
 import os.path
+import util
 
 
 def __lldb_init_module(debugger, internal_dict):
@@ -153,7 +154,7 @@ def remove_file(debugger, command, result, internal_dict):
 
 def dump_data(debugger, output_filepath, data_size, data_addr):
     directory = os.path.dirname(output_filepath)
-    try_mkdir(directory)
+    util.try_mkdir(directory)
 
     res = lldb.SBCommandReturnObject()
     interpreter = debugger.GetCommandInterpreter()
@@ -267,7 +268,7 @@ def load_file(debugger, filepath):
     json_str;
     '''
 
-    ret_str = exe_script(debugger, command_script)
+    ret_str = util.exe_script(debugger, command_script)
 
     return ret_str
 
@@ -325,7 +326,7 @@ def load_dir(debugger, filepath):
     json_str;
     '''
 
-    ret_str = exe_script(debugger, command_script)
+    ret_str = util.exe_script(debugger, command_script)
 
     return ret_str
 
@@ -354,7 +355,7 @@ def allocate_memory(debugger, size):
     json_str;
     '''
 
-    ret_str = exe_script(debugger, command_script)
+    ret_str = util.exe_script(debugger, command_script)
 
     return ret_str
 
@@ -388,7 +389,7 @@ def write_data_to_file(debugger, data_addr, data_size, dst, file_name):
     error != nil ? error.localizedDescription : @"upload success";
     '''
 
-    ret_str = exe_script(debugger, command_script)
+    ret_str = util.exe_script(debugger, command_script)
 
     return ret_str
 
@@ -443,36 +444,9 @@ def remove_file_on_device(debugger, filepath):
     message;
     '''
 
-    ret_str = exe_script(debugger, command_script)
+    ret_str = util.exe_script(debugger, command_script)
 
     return ret_str
-
-
-def try_mkdir(dir_path):
-    if not os.path.exists(dir_path):
-        os.makedirs(dir_path)
-
-
-def exe_script(debugger, command_script):
-    res = lldb.SBCommandReturnObject()
-    interpreter = debugger.GetCommandInterpreter()
-    interpreter.HandleCommand('exp -l objc -O -- ' + command_script, res)
-
-    if not res.HasResult():
-        print('execute JIT code failed:\n{}'.format(res.GetError()))
-        return ''
-
-    response = res.GetOutput()
-
-    response = response.strip()
-    # 末尾有两个\n
-    if response.endswith('\n\n'):
-        response = response[:-2]
-    # 末尾有一个\n
-    if response.endswith('\n'):
-        response = response[:-1]
-
-    return response
 
 
 def generate_option_parser(prog):

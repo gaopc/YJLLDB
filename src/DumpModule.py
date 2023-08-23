@@ -5,6 +5,7 @@ import lldb
 import optparse
 import shlex
 import os
+import util
 
 
 def __lldb_init_module(debugger, internal_dict):
@@ -47,7 +48,7 @@ def dump_module(debugger, command, result, internal_dict):
 
     lookup_module_name = lookup_module_name.replace("'", "")
     output_dir = os.path.expanduser('~') + '/lldb_dump_macho'
-    try_mkdir(output_dir)
+    util.try_mkdir(output_dir)
 
     module_info_str = get_module_regions(debugger, lookup_module_name)
     if module_info_str:
@@ -86,7 +87,7 @@ def dump_module_before_load_called(debugger, command, result, internal_dict):
 
     lookup_module_name = lookup_module_name.replace("'", "")
     output_dir = os.path.expanduser('~') + '/lldb_dump_macho'
-    try_mkdir(output_dir)
+    util.try_mkdir(output_dir)
 
     target = debugger.GetSelectedTarget()
     for module in target.module_iter():
@@ -176,7 +177,7 @@ def dump_module_with_info(debugger, module_info, output_dir):
     module_size = module_info["size"]
 
     module_dir = '{}/{}'.format(output_dir, module_name)
-    try_mkdir(module_dir)
+    util.try_mkdir(module_dir)
 
     module_info_write_to_file(module_info, module_dir)
 
@@ -216,11 +217,6 @@ def dump_module_with_info(debugger, module_info, output_dir):
         x_file.close()
 
     return '{} bytes dump to {}'.format(module_size, output_path)
-
-
-def try_mkdir(dir_path):
-    if not os.path.exists(dir_path):
-        os.makedirs(dir_path)
 
 
 def module_info_write_to_file(module_info, module_dir):
@@ -414,31 +410,9 @@ def get_module_regions(debugger, module):
     json_str;
     '''
 
-    ret_str = exe_script(debugger, command_script)
+    ret_str = util.exe_script(debugger, command_script)
 
     return ret_str
-
-
-def exe_script(debugger, command_script):
-    res = lldb.SBCommandReturnObject()
-    interpreter = debugger.GetCommandInterpreter()
-    interpreter.HandleCommand('exp -l objc -O -- ' + command_script, res)
-
-    if not res.HasResult():
-        print('execute JIT code failed:\n{}'.format(res.GetError()))
-        return ''
-
-    response = res.GetOutput()
-
-    response = response.strip()
-    # 末尾有两个\n
-    if response.endswith('\n\n'):
-        response = response[:-2]
-    # 末尾有一个\n
-    if response.endswith('\n'):
-        response = response[:-1]
-
-    return response
 
 
 def generate_option_parser(prog):
