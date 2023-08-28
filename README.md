@@ -618,7 +618,7 @@ remove success
 
 
 
-#### fblock - find block
+#### fblock - find block (arm64 only)
 
 Find the specified block(s) in user modules.
 
@@ -639,7 +639,7 @@ find a block: 0x100f18210 in JITDemo`-[ViewController touchesBegan:withEvent:]
 
 
 
-#### blocks - find blocks
+#### blocks - find blocks (arm64 only)
 
 Find blocks in user modules and save block symbols to block_symbol.json
 
@@ -671,7 +671,7 @@ find a stack block @0x104b32080 in LLDBJIT`+[Image getBlocksInfo:] at Image.m:0:
 
 
 
-#### bblocks - break blocks
+#### bblocks - break blocks (arm64 only)
 
 Break all blocks in user modules
 
