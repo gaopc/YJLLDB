@@ -61,6 +61,9 @@ def break_all_functions_in_module(debugger, command, result, internal_dict):
         module_list = lldb.SBFileSpecList()
         module_list.Append(module_file_spec)
         comp_unit_list = lldb.SBFileSpecList()
+        # for comp_unit in module.compile_unit_iter():
+        #     comp_unit_list.Append(comp_unit.GetFileSpec())
+
         for symbol in module:
             # 2为Code，5为Trampoline，即调用的系统函数
             if symbol.GetType() != 2:
