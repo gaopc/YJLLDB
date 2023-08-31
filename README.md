@@ -70,6 +70,8 @@
 
 ​     \* [bmethod - break method](#bmethod---break-method)
 
+​     \* [bmain - break main function](#bmain---break-main-function)
+
 ## Installation
 
 1. Clone this repo
@@ -757,6 +759,15 @@ Breakpoint 3: JITDemo`+[ViewController load] at ViewController.m:26:0, address =
 Breakpoint 4: JITDemo`+[AppDelegate load] at AppDelegate.m:16:0, address = 0x1024f96a4
 -----try to method in LLDBJIT-----
 set 2 breakpoints
+```
+
+
+
+#### bmain - break main function
+
+```stylus
+(lldb) bmain
+Breakpoint 9: BasicSyntax`___lldb_unnamed_symbol266, address = 0x10017c3fc
 ```
 
 
