@@ -40,7 +40,7 @@ def dump_app(debugger, command, result, internal_dict):
     output_dir = os.path.expanduser('~') + '/lldb_dump_macho'
     util.try_mkdir(output_dir)
 
-    app_info_str = get_app_regions(debugger)
+    app_info_str = get_app_regions(debugger, options.apply_patch)
     if app_info_str:
         app_info = json.loads(app_info_str)
         print('dumping {}, this may take a while'.format(app_info["app_name"]))
@@ -65,7 +65,7 @@ def dump_app_with_info(debugger, app_info, output_dir):
     app_name = app_info["app_name"]
     files = app_info["files"]
     encrypted_images = app_info["encryptedImages"]
-    bundle_path = app_info["bundlePath"]
+    # bundle_path = app_info["bundlePath"]
 
     work_dir = '{}/{}'.format(output_dir, app_name)
     datas_dir = '{}/datas'.format(work_dir)
@@ -181,7 +181,7 @@ def create_ipa(work_dir, display_name, os_version):
     return success
 
 
-def get_app_regions(debugger):
+def get_app_regions(debugger, apply_patch):
     command_script = '@import Foundation;'
     command_script += r'''
     struct mach_header_64 {
@@ -216,6 +216,7 @@ def get_app_regions(debugger):
                        of 8 bytes */
     };
     '''
+    command_script += 'BOOL force = {};'.format('YES' if apply_patch else 'NO')
     command_script += r'''
     NSBundle *mainBundle = [NSBundle mainBundle];
     NSString *bundlePath = mainBundle.bundlePath;
@@ -282,7 +283,7 @@ def get_app_regions(debugger):
             sc = (struct load_command *)cur;
             if (sc->cmd == 0x2C) { //LC_ENCRYPTION_INFO_64
                 struct encryption_info_command_64 *eic = (struct encryption_info_command_64 *)sc;
-                if (eic->cryptid != 0) {
+                if (eic->cryptid != 0 || force) {
                     ret = [NSString stringWithFormat:@"%d-%d-0x%lx", eic->cryptoff, eic->cryptsize, (uintptr_t)eic - (uintptr_t)mach_header + 4 * sizeof(uint32_t)];
                 }
                 break;
@@ -345,5 +346,10 @@ def generate_option_parser(prog):
     parser.add_option("-v", "--min_os_version",
                       dest="min_os_version",
                       help="min deployment os version")
+    parser.add_option("-p", "--apply_patch",
+                      action="store_true",
+                      default=False,
+                      dest="apply_patch",
+                      help="apply patch")
 
     return parser
