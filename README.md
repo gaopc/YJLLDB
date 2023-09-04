@@ -771,8 +771,3 @@ Breakpoint 9: BasicSyntax`___lldb_unnamed_symbol266, address = 0x10017c3fc
 ```
 
 
-
-## License
-
-`YJLLDB` is MIT-licensed. See `LICENSE`.
-
