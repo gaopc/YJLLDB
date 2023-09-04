@@ -4,6 +4,8 @@ import lldb
 import optparse
 import shlex
 import util
+import MachO
+import json
 
 
 def __lldb_init_module(debugger, internal_dict):
@@ -13,6 +15,8 @@ def __lldb_init_module(debugger, internal_dict):
     debugger.HandleCommand(
         'command script add -h "print executable name."'
         ' -f MachOInfo.show_executable_name executable')
+
+    debugger.HandleCommand('command script add -h "parse mach-o of user modules." -f MachOInfo.parse_macho macho')
 
 
 def show_entitlements(debugger, command, result, internal_dict):
@@ -50,6 +54,66 @@ def show_executable_name(debugger, command, result, internal_dict):
     """
     target = debugger.GetSelectedTarget()
     result.AppendMessage(target.GetExecutable().GetFilename())
+
+
+def parse_macho(debugger, command, result, internal_dict):
+    """
+    parse mach-o of user modules.
+    """
+
+    # posix=False特殊符号处理相关，确保能够正确解析参数，因为OC方法前有-
+    command_args = shlex.split(command, posix=False)
+    # 创建parser
+    parser = generate_option_parser()
+    # 解析参数，捕获异常
+    try:
+        # options是所有的选项，key-value形式，args是其余剩余所有参数，不包含options
+        (options, args) = parser.parse_args(command_args)
+    except Exception as error:
+        print(error)
+        result.SetError("\n" + parser.get_usage())
+        return
+
+    if args:
+        lookup_module_name = args[0]
+    else:
+        lookup_module_name = ''
+
+    target = debugger.GetSelectedTarget()
+
+    bundle_path = target.GetExecutable().GetDirectory()
+    for module in target.module_iter():
+        module_file_spec = module.GetFileSpec()
+        module_dir = module_file_spec.GetDirectory()
+        if bundle_path not in module_dir:
+            continue
+
+        module_name = module_file_spec.GetFilename()
+        if module_name.startswith('libswift'):
+            continue
+
+        if len(lookup_module_name) and lookup_module_name != module_name:
+            continue
+
+        print("-----parsing module %s-----" % module_name)
+        seg = module.FindSection('__TEXT')
+        if not seg:
+            result.AppendMessage('seg __TEXT not found')
+            continue
+
+        header_addr = seg.GetLoadAddress(target)
+        first_set = seg.GetSubSectionAtIndex(0)
+        sec_addr = first_set.GetLoadAddress(target)
+
+        error = lldb.SBError()
+        header_size = sec_addr - header_addr
+        header_data = target.ReadMemory(lldb.SBAddress(header_addr, target), header_size, error)
+        if not error.Success():
+            result.AppendMessage('read header failed! {}'.format(error.GetCString()))
+            continue
+
+        info = MachO.parse_header(header_data)
+        print(json.dumps(info, indent=2))
 
 
 def get_entitlements(debugger, keyword):
