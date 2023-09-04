@@ -390,7 +390,7 @@ def get_group_path(debugger):
                 sig_found = YES;
                 char *sign_ptr = (char *)vmaddr + lc_signature->dataoff - file_offset + slide;
 #if __arm64e__
-                void *sign = (void *)ptrauth_strip(codeSignature, ptrauth_key_function_pointer);
+                void *sign = (void *)ptrauth_strip(sign_ptr, ptrauth_key_function_pointer);
 #else
                 void *sign = (void *)sign_ptr;
 #endif
