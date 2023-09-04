@@ -1,5 +1,4 @@
 # -*- coding: UTF-8 -*-
-import json
 
 import lldb
 import optparse
@@ -32,13 +31,7 @@ def find_app_delegate(debugger, command, result, internal_dict):
         result.SetError("\n" + parser.get_usage())
         return
 
-    if args:
-        lookup_module_name = ''.join(args)
-    else:
-        lookup_module_name = ''
-
-    lookup_module_name = lookup_module_name.replace("'", "")
-    class_names_str = get_module_regions(debugger, lookup_module_name)
+    class_names_str = get_app_delegate_class(debugger)
     if class_names_str:
         class_names = class_names_str.split('\n')
         class_names = sorted(class_names)
@@ -46,7 +39,7 @@ def find_app_delegate(debugger, command, result, internal_dict):
         result.AppendMessage("{}".format('\n'.join(class_names)))
 
 
-def get_module_regions(debugger, module):
+def get_app_delegate_class(debugger):
     command_script = '@import Foundation;'
     command_script += r'''
     NSString *module_path = [[NSBundle mainBundle] executablePath];
