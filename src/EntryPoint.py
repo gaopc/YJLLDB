@@ -3,7 +3,7 @@
 import lldb
 import optparse
 import shlex
-import Macho
+import MachO
 
 
 def __lldb_init_module(debugger, internal_dict):
@@ -50,46 +50,44 @@ def handle_command(debugger, command, result, action):
     file_spec = target.GetExecutable()
     module = target.FindModule(file_spec)
 
-    for seg in module.section_iter():
-        seg_name = seg.GetName()
-        if seg_name != '__TEXT':
+    seg = module.FindSection('__TEXT')
+    if not seg:
+        result.AppendMessage('seg __TEXT not found')
+        return
+
+    header_addr = seg.GetLoadAddress(target)
+    first_set = seg.GetSubSectionAtIndex(0)
+    sec_addr = first_set.GetLoadAddress(target)
+
+    error = lldb.SBError()
+    header_size = sec_addr - header_addr
+    header_data = target.ReadMemory(lldb.SBAddress(header_addr, target), header_size, error)
+    if not error.Success():
+        result.AppendMessage('read header failed! {}'.format(error.GetCString()))
+        return
+
+    info = MachO.parse_header(header_data)
+
+    lcs = info['lcs']
+    for lc in lcs:
+        if lc['cmd'] != '80000028':  # LC_MAIN
             continue
 
-        header_addr = seg.GetLoadAddress(target)
+        entryoff = int(lc['entryoff'], 16)
+        main_load_addr = header_addr + entryoff
 
-        first_set = seg.GetSubSectionAtIndex(0)
-        sec_addr = first_set.GetLoadAddress(target)
-
-        error = lldb.SBError()
-        header_size = sec_addr - header_addr
-        header_data = target.ReadMemory(lldb.SBAddress(header_addr, target), header_size, error)
-        if not error.Success():
-            result.AppendMessage('read header failed! {}'.format(error.GetCString()))
-            break
-
-        info = Macho.parse_header(header_data)
-
-        lcs = info['lcs']
-        for lc in lcs:
-            if lc['cmd'] != '80000028':  # LC_MAIN
-                continue
-
-            entryoff = int(lc['entryoff'], 16)
-            main_load_addr = header_addr + entryoff
-
-            if action == 'print':
-                result.AppendMessage("function main at 0x{:x}, fileoff: 0x{:x}".format(main_load_addr, entryoff))
+        if action == 'print':
+            result.AppendMessage("function main at 0x{:x}, fileoff: 0x{:x}".format(main_load_addr, entryoff))
+        else:
+            main_addr = target.ResolveLoadAddress(main_load_addr)
+            brkpoint = target.BreakpointCreateBySBAddress(main_addr)
+            # 判断下断点是否成功
+            if not brkpoint.IsValid() or brkpoint.num_locations == 0:
+                result.AppendMessage("Breakpoint isn't valid or hasn't found any hits")
             else:
-                main_addr = target.ResolveLoadAddress(main_load_addr)
-                brkpoint = target.BreakpointCreateBySBAddress(main_addr)
-                # 判断下断点是否成功
-                if not brkpoint.IsValid() or brkpoint.num_locations == 0:
-                    result.AppendMessage("Breakpoint isn't valid or hasn't found any hits")
-                else:
-                    result.AppendMessage("Breakpoint {}: {}, address = 0x{:x}"
-                                         .format(brkpoint.GetID(), util.get_desc_for_address(main_addr), main_load_addr)
-                                         )
-            break
+                result.AppendMessage("Breakpoint {}: {}, address = 0x{:x}"
+                                     .format(brkpoint.GetID(), util.get_desc_for_address(main_addr), main_load_addr)
+                                     )
         break
 
 
