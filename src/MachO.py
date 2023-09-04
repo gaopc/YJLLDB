@@ -92,6 +92,8 @@ def parse_lcs(base, offset, n_cmds, macho):
             macho['lcs'].append(parse_encryption_info(base, offset, cmd, cmd_size))
         elif cmd == 0x28 | 0x80000000:  # LC_MAIN (0x28|LC_REQ_DYLD)
             macho['lcs'].append(parse_main(base, offset, cmd, cmd_size))
+        elif cmd == 0x1D:  # LC_CODE_SIGNATURE
+            macho['lcs'].append(parse_linkedit_data(base, offset, cmd, cmd_size))
 
         offset += cmd_size
 
@@ -194,6 +196,23 @@ def parse_main(base, offset, cmd, cmd_size):
     }
 
     # print(json.dumps(output, indent=2))
+
+    return output
+
+
+def parse_linkedit_data(base, offset, cmd, cmd_size):
+    """Parse link-edit data load command."""
+
+    offset += 8  # skip cmd and cmd_size
+    dataoff = get_int(base, offset)
+    datasize = get_int(base, offset + 4)
+
+    output = {
+        'cmd': '{:X}'.format(cmd),
+        'cmd_size': '{:X}'.format(cmd_size),
+        'dataoff': '{:X}'.format(dataoff),
+        'datasize': '{:X}'.format(datasize),
+    }
 
     return output
 
