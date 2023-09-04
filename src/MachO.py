@@ -14,11 +14,12 @@ g_byteorder = 'big'
 
 
 def parse_header(header):
-    """Determines characteristics about the entire file and begins to parse.
+    """
+    parse macho header in memory
     """
     is_fat = header.startswith(b'\xca\xfe\xba\xbe')
     if is_fat:
-        info = parse_universal(header)
+        info = parse_fat(header)
     else:
         info = parse_macho(header, 0)
 
@@ -68,10 +69,8 @@ def parse_macho(base, offset):
 
 
 def parse_lcs(base, offset, n_cmds, macho):
-    """Determine which load commands are present and parse each one
-    accordingly. Return as a list.
-
-    Load command structures found in '/usr/include/mach-o/loader.h'.
+    """
+    Parse load commands.
     """
     macho['lcs'] = []
 
@@ -99,7 +98,7 @@ def parse_lcs(base, offset, n_cmds, macho):
 
 
 def parse_segment(base, m_offset, cmd, cmd_size):
-    """Parse segment command."""
+    """Parse LC_SEGMENT(_64)."""
 
     if g_is_64_bit:
         seg_size = 72   # sizeof(struct segment_command_64)
@@ -164,8 +163,8 @@ def parse_section(base, m_offset):
 
 
 def parse_encryption_info(base, offset, cmd, cmd_size):
-    """Parse encryption info load command. Contains the file offset and size
-    of an encrypted segment.
+    """
+    Parse LC_ENCRYPTION_INFO(_64).
     """
     offset += 8  # skip cmd and cmd_size
     cryptoff = get_int(base, offset)
@@ -185,7 +184,7 @@ def parse_encryption_info(base, offset, cmd, cmd_size):
 
 
 def parse_main(base, offset, cmd, cmd_size):
-    """Parse main load command."""
+    """Parse LC_MAIN."""
     offset += 8  # skip cmd and cmd_size
     entryoff = get_long(base, offset)
 
@@ -201,7 +200,7 @@ def parse_main(base, offset, cmd, cmd_size):
 
 
 def parse_linkedit_data(base, offset, cmd, cmd_size):
-    """Parse link-edit data load command."""
+    """Parse linkedit_data_command."""
 
     offset += 8  # skip cmd and cmd_size
     dataoff = get_int(base, offset)
@@ -217,8 +216,8 @@ def parse_linkedit_data(base, offset, cmd, cmd_size):
     return output
 
 
-def parse_universal(header):
-    """Parses universal header in memory."""
+def parse_fat(header):
+    """Parses fat header in memory."""
     # number of mach-o's contained in this binary
     cursor = 4
     # fat header部分是大端
@@ -239,7 +238,7 @@ def parse_universal(header):
         macho = parse_macho(header, offset, size)
         machos.append(macho)
 
-    return {'universal': {'n_machos': n_machos, 'machos': machos}}
+    return {'fat': {'n_machos': n_machos, 'machos': machos}}
 
 
 def get_int(base, offset):
