@@ -145,10 +145,12 @@ def get_entitlements(debugger, keyword):
     }
     char *ent_str = NULL;
     const mach_header_t *headers[256] = {0};
+    NSMutableArray *module_names = [NSMutableArray array];
     int name_count = 0;
     if (!keyword || [@"NULL" isEqualToString:keyword]) {
         keyword = [[[NSBundle mainBundle] executablePath] lastPathComponent];
     }
+    
     uint32_t image_count = (uint32_t)_dyld_image_count();
     for (uint32_t i = 0; i < image_count; i++) {
         const char *name = (const char *)_dyld_get_image_name(i);
@@ -166,6 +168,7 @@ def get_entitlements(debugger, keyword):
         if (isAddress || range.location != NSNotFound) {
             headers[name_count] = mach_header;
             name_count++;
+            [module_names addObject:module_name];
         }
         if (isAddress) {
             break;
@@ -221,13 +224,15 @@ def get_entitlements(debugger, keyword):
             }
             lc = (struct load_command *)((char *)lc + lc->cmdsize);
         }
-        
+        if (name.length == 0) {
+            name = module_names[idx];
+        }
         if (lc_signature) {
             sig_found = YES;
             char *sign_ptr = NULL;
             sign_ptr = (char *)mach_header + (li_vmaddr - text_vmaddr) + lc_signature->dataoff - file_offset;
 #if __arm64e__
-            void *sign = (void *)ptrauth_strip(codeSignature, ptrauth_key_function_pointer);
+            void *sign = (void *)ptrauth_strip(sign_ptr, ptrauth_key_function_pointer);
 #else
             void *sign = (void *)sign_ptr;
 #endif
