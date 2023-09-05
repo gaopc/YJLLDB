@@ -33,6 +33,9 @@ def break_method(debugger, command, result, internal_dict):
         return
 
     sel_names = [' ' + name + ']' for name in args]
+    for arg in args:
+        sel_names.append(' ' + arg + ']')
+        sel_names.append('.' + arg + '(')
 
     target = debugger.GetSelectedTarget()
 
@@ -57,7 +60,7 @@ def break_method(debugger, command, result, internal_dict):
                 continue
 
             sym_name = symbol.GetName()
-
+            
             if '___lldb_unnamed_symbol' in sym_name:
                 continue
             # 过滤析构函数
@@ -87,7 +90,7 @@ def break_method(debugger, command, result, internal_dict):
 
             should_continue = True
             for sel_name in sel_names:
-                if sym_name.endswith(sel_name):
+                if sel_name in sym_name:
                     should_continue = False
                     break
             if should_continue:
