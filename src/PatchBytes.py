@@ -4,16 +4,17 @@ import lldb
 import optparse
 import shlex
 
+g_nop_bytes = b'\x1f\x20\x03\xd5'
+
 
 def __lldb_init_module(debugger, internal_dict):
     debugger.HandleCommand(
-        'command script add -h "patch the specified bytes in user modules with nop" -f '
-        'PatchBytes.patch_bytes_with_nop patch')
+        'command script add -h "patch bytes in user modules" -f PatchBytes.patch patch')
 
 
-def patch_bytes_with_nop(debugger, command, result, internal_dict):
+def patch(debugger, command, result, internal_dict):
     """
-    patch the specified bytes in user modules with nop
+    patch bytes in user modules
     """
     # posix=False特殊符号处理相关，确保能够正确解析参数，因为OC方法前有-
     command_args = shlex.split(command, posix=False)
@@ -28,7 +29,7 @@ def patch_bytes_with_nop(debugger, command, result, internal_dict):
         result.SetError("\n" + parser.get_usage())
         return
 
-    if len(args) == 0:
+    if len(args) == 0 and not options.size:
         result.AppendMessage(parser.get_usage())
         return
     elif len(args) == 1:
@@ -38,15 +39,31 @@ def patch_bytes_with_nop(debugger, command, result, internal_dict):
     else:
         bytes_list = [int(x, 16) for x in args]
 
+    if options.address:
+        if options.size:
+            size = int(options.size)
+        else:
+            size = len(bytes_list)
+
+        address_str = options.address
+        if address_str.startswith('0x'):
+            address = int(address_str, 16)
+        else:
+            address = int(address_str)
+
+        patch_addr_with_bytes(debugger, result, address, size, bytes_list)
+    else:
+        patch_all_matched_bytes_with_nop(debugger, result, bytes_list)
+
+
+def patch_all_matched_bytes_with_nop(debugger, result, bytes_list):
     bytes_len = len(bytes_list)
     if bytes_len % 4 != 0:
         result.SetError("The number of bytes must be a multiple of 4")
         return
-
     input_bytes = bytes(bytes_list)
 
     print('lookup bytes, this may take a while')
-    nop_bytes = b'\x1f\x20\x03\xd5'
     loop_count = int(bytes_len / 4)
     target = debugger.GetSelectedTarget()
     process = target.GetProcess()
@@ -106,7 +123,7 @@ def patch_bytes_with_nop(debugger, command, result, internal_dict):
                     for idx in range(loop_count):
                         to_patch = bytes_addr + idx * 4
                         error2 = lldb.SBError()
-                        process.WriteMemory(to_patch, nop_bytes, error2)
+                        process.WriteMemory(to_patch, g_nop_bytes, error2)
                         if not error2.Success():
                             result.AppendMessage('patch bytes at {} failed! {}'.format(to_patch, error2.GetCString()))
                             continue
@@ -119,13 +136,53 @@ def patch_bytes_with_nop(debugger, command, result, internal_dict):
     result.AppendMessage("patch {} locations".format(total_count))
 
 
+def patch_addr_with_bytes(debugger, result, addr, size, bytes_list):
+    if size == 0 or size % 4 != 0:
+        result.SetError("The number of bytes must be a multiple of 4")
+        return
+
+    bytes_len = len(bytes_list)
+    if bytes_len > 0 and bytes_len != size:
+        result.SetError("arguments error")
+        return
+
+    if bytes_len:
+        new_bytes = bytes(bytes_list)
+    else:
+        new_bytes = b''
+        loop_count = int(size / 4)
+        for i in range(loop_count):
+            new_bytes += g_nop_bytes
+
+    target = debugger.GetSelectedTarget()
+    process = target.GetProcess()
+
+    to_patch = addr
+    error2 = lldb.SBError()
+    process.WriteMemory(to_patch, new_bytes, error2)
+    if error2.Success():
+        result.AppendMessage('patch {} bytes at 0x{:x} success'.format(len(new_bytes), to_patch))
+    else:
+        result.AppendMessage('patch bytes at {} failed! {}'.format(to_patch, error2.GetCString()))
+
+
 def generate_option_parser():
     usage = "usage: %prog bytes\n" + \
-            "for example:\n" + \
-            "\t%prog \\xc0\\x03\\x5f\\xd6\n" + \
-            "or\n" + \
-            "\t%prog c0 03 5f d6"
+            "examples:\n" + \
+            "\t1. %prog \\xc0\\x03\\x5f\\xd6\n" + \
+            "\t2. %prog c0 03 5f d6\n" + \
+            "\t3. %prog -a 0x12345678 \\x1f\\x20\\x03\\xd5\n" + \
+            "\t4. %prog -a 0x12345678 1f 20 03 d5\n" + \
+            "\t5. %prog -a 0x12345678 -s 4"
 
     parser = optparse.OptionParser(usage=usage, prog='patch')
+    parser.add_option("-a", "--address",
+                      action="store",
+                      dest="address",
+                      help="address to path")
+    parser.add_option("-s", "--size",
+                      action="store",
+                      dest="size",
+                      help="size to path")
 
     return parser
