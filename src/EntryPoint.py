@@ -4,6 +4,7 @@ import lldb
 import optparse
 import shlex
 import MachO
+import util
 
 
 def __lldb_init_module(debugger, internal_dict):
