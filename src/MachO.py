@@ -33,9 +33,7 @@ def parse_macho(base, offset):
     """
     global g_byteorder, g_is_64_bit
     magic = int.from_bytes(base[offset:offset + 4], byteorder='big')
-    identity = macho_magics[magic]
-    g_is_64_bit = identity[0]
-    is_little_endian = identity[1]
+    g_is_64_bit, is_little_endian = macho_magics[magic]
 
     if is_little_endian:
         endian = '<'
@@ -235,18 +233,24 @@ def parse_fat(header):
 
         cursor += 4     # skip align field
 
-        macho = parse_macho(header, offset, size)
+        macho = parse_macho(header, offset)
         machos.append(macho)
 
     return {'fat': {'n_machos': n_machos, 'machos': machos}}
 
 
-def get_int(base, offset):
-    return int.from_bytes(base[offset:offset + 4], byteorder=g_byteorder)
+def get_int(base, offset, byteorder=None):
+    if byteorder:
+        return int.from_bytes(base[offset:offset + 4], byteorder=byteorder)
+    else:
+        return int.from_bytes(base[offset:offset + 4], byteorder=g_byteorder)
 
 
-def get_long(base, offset):
-    return int.from_bytes(base[offset:offset + 8], byteorder=g_byteorder)
+def get_long(base, offset, byteorder=None):
+    if byteorder:
+        return int.from_bytes(base[offset:offset + 8], byteorder=byteorder)
+    else:
+        return int.from_bytes(base[offset:offset + 8], byteorder=g_byteorder)
 
 
 def get_string(base, offset, length):
