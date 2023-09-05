@@ -8,7 +8,7 @@ import shlex
 def __lldb_init_module(debugger, internal_dict):
     debugger.HandleCommand(
         'command script add -h "patch the specified bytes in user modules with nop" -f '
-        'PatchBytesWithNOP.patch_bytes_with_nop patch')
+        'PatchBytes.patch_bytes_with_nop patch')
 
 
 def patch_bytes_with_nop(debugger, command, result, internal_dict):
