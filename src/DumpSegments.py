@@ -50,6 +50,7 @@ def dump_segments(debugger, command, result, internal_dict):
                 result.AppendMessage('seg __TEXT not found in {}'.format(module_name))
                 continue
 
+            result.AppendMessage("-----parsing module %s-----" % module_name)
             header_addr = seg.GetLoadAddress(target)
             slide = header_addr - seg.GetFileAddress()
 
@@ -66,7 +67,7 @@ def dump_segments(debugger, command, result, internal_dict):
             info = MachO.parse_header(header_data)
 
             lcs = info['lcs']
-            seg_info += '       [start - end)          size   name\n'
+            seg_info += '       [start - end)\t\t\tsize\t\tname\n'
             linkedit_offset = 0
             linkedit_vmaddr = 0
             for lc in lcs:
@@ -76,14 +77,15 @@ def dump_segments(debugger, command, result, internal_dict):
                     seg_size = int(lc['vmsize'], 16)
                     seg_end = seg_start + seg_size
                     seg_name = lc['name']
-                    seg_info += '[0x{:x}-0x{:x}) 0x{:x} {}\n'.format(seg_start, seg_end, seg_size, seg_name)
+                    seg_info += '-' * 60 + '\n'
+                    seg_info += '[0x{:<9x}-0x{:<9x})\t\t0x{:<9x} {}\n'.format(seg_start, seg_end, seg_size, seg_name)
 
                     sects = lc['sects']
                     for sect in sects:
                         sec_start = slide + int(sect['addr'], 16)
                         sec_size = int(sect['size'], 16)
                         sec_end = sec_start + sec_size
-                        seg_info += '\t[0x{:x}-0x{:x}) 0x{:x} {}\n'.format(sec_start, sec_end, sec_size, sect['name'])
+                        seg_info += '\t[0x{:<9x}-0x{:<9x})\t0x{:<9x} {}\n'.format(sec_start, sec_end, sec_size, sect['name'])
 
                     if seg_name == '__LINKEDIT':
                         linkedit_offset = int(lc['offset'], 16)
@@ -93,9 +95,10 @@ def dump_segments(debugger, command, result, internal_dict):
                     datasize = int(lc['datasize'], 16)
                     sign_start = linkedit_vmaddr + slide + dataoff - linkedit_offset
                     sign_end = sign_start + datasize
-                    seg_info += '[0x{:x}-0x{:x}) 0x{:x} Code Signature\n'.format(sign_start, sign_end, datasize)
+                    seg_info += '-' * 60 + '\n'
+                    seg_info += '[0x{:<9x}-0x{:<9x})\t\t0x{:<9x} Code Signature\n'.format(sign_start, sign_end, datasize)
 
-        result.AppendMessage("{}".format(seg_info))
+        result.AppendMessage(seg_info)
 
 
 def generate_option_parser():
