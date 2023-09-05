@@ -5,6 +5,19 @@ import shlex
 import lldb
 import os
 
+g_arm64_nop_bytes = b'\x1f\x20\x03\xd5'
+g_x64_nops = {
+    1: b'\x90',
+    2: b'\x66\x90',
+    3: b'\x0F\x1F\x00',
+    4: b'\x0F\x1F\x40\x00',
+    5: b'\x0F\x1F\x44\x00\x00',
+    6: b'\x66\x0F\x1F\x44\x00\x00',
+    7: b'\x0F\x1F\x80\x00\x00\x00\x00',
+    8: b'\x0F\x1F\x84\x00\x00\x00\x00\x00',
+    9: b'\x66\x0F\x1F\x84\x00\x00\x00\x00\x00',
+}
+
 
 def get_desc_for_address(addr, default_name=None, need_line=True):
     symbol = addr.GetSymbol()
@@ -58,3 +71,26 @@ def try_mkdir(dir_path):
     if not os.path.exists(dir_path):
         os.makedirs(dir_path)
 
+
+def is_x64():
+    platform = lldb.debugger.GetSelectedPlatform()
+    triple = platform.GetTriple()
+
+    return 'x86_64' in triple
+
+
+def gen_nop(size):
+    new_bytes = b''
+    if is_x64():  # x86_64 ios-simulator
+        loop_count = int(size / 4)
+        for _ in range(loop_count):
+            new_bytes += g_x64_nops[4]
+        mod = size % 4
+        if mod > 0:
+            new_bytes += g_x64_nops[mod]
+    else:
+        loop_count = int(size / 4)
+        for _ in range(loop_count):
+            new_bytes += g_arm64_nop_bytes
+
+    return new_bytes
