@@ -16,7 +16,7 @@
 
 ​     \* [commads to get common directory](#commads-to-get-common-directory)
 
-​     \* [ls](#ls)
+​     \* [ls](#xls)
 
 ​     \* [find_el - find endless loop](#find_el---find-endless-loop)
 
@@ -190,12 +190,12 @@ frame #3: 0x104360f78 Interlock`-[ViewController touchesBegan:withEvent:] + at V
 
 
 
-#### ls 
+#### xls 
 
 List directory contents, just like `ls -lh` on Mac.
 
 ```stylus
-(lldb) ls bu
+(lldb) xls bu
 /var/containers/Bundle/Application/D0419A6E-053C-4E35-B422-7C0FD6CAB060/Interlock.app
 drwxr-xr-x        128B 1970-01-01 00:00:00 +0000 Base.lproj
 drwxr-xr-x         96B 1970-01-01 00:00:00 +0000 _CodeSignature
@@ -204,13 +204,13 @@ drwxr-xr-x         64B 1970-01-01 00:00:00 +0000 META-INF
 -rwxr-xr-x      103.0K 2023-05-19 11:07:02 +0000 Interlock
 -rw-r--r--          8B 2023-05-16 03:17:32 +0000 PkgInfo
 -rw-r--r--      194.7K 2023-05-16 03:17:31 +0000 embedded.mobileprovision
-(lldb) ls home
+(lldb) xls home
 /var/mobile/Containers/Data/Application/09E63130-623F-4124-BCBB-59E20BD28964
 drwxr-xr-x         96B 2023-05-19 07:28:01 +0000 Documents
 drwxr-xr-x        128B 2023-05-16 04:51:14 +0000 Library
 drwxr-xr-x         64B 1970-01-01 00:00:00 +0000 SystemData
 drwxr-xr-x         64B 2023-05-16 04:51:14 +0000 tmp
-(lldb) ls /var/mobile/Containers/Data/Application/09E63130-623F-4124-BCBB-59E20BD28964/Documents
+(lldb) xls /var/mobile/Containers/Data/Application/09E63130-623F-4124-BCBB-59E20BD28964/Documents
 -rw-r--r--         18B 2023-05-16 05:36:05 +0000 report.txt
 ```
 
@@ -835,4 +835,18 @@ Breakpoint 9: BasicSyntax`___lldb_unnamed_symbol266, address = 0x10017c3fc
 ```
 
 [back to commands list](#Commands-list)
+
+
+
+## Credits
+
+https://github.com/DerekSelander/LLDB
+
+https://github.com/facebook/chisel
+
+https://github.com/aaronst/macholibre
+
+## License
+
+YJLLDB is released under the Apache License 2.0. See LICENSE file for details.
 
