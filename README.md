@@ -99,6 +99,8 @@ LLDBCode`-[ViewController viewDidLoad]:
     0x1029b3008 <+240>: ret
 ```
 
+[back to commands list](#Commands-list)
+
 
 
 #### baf - break all functions in module
@@ -114,6 +116,8 @@ will set breakpoint for 76987 names
 Breakpoint 3: 75016 locations
 ```
 
+[back to commands list](#Commands-list)
+
 
 
 #### bdc - breakpoint disable current
@@ -128,6 +132,8 @@ thread #1: tid = 0x2cb739, 0x000000018354f950 libsystem_kernel.dylib`open, queue
 disable breakpoint 5.13 [0x18354f950]libsystem_kernel.dylib`open
 and continue
 ```
+
+[back to commands list](#Commands-list)
 
 
 
@@ -157,6 +163,8 @@ frame #3: 0x104360f78 Interlock`-[ViewController touchesBegan:withEvent:] + at V
 ...
 ```
 
+[back to commands list](#Commands-list)
+
 
 
 #### commads to get common directory
@@ -177,6 +185,8 @@ frame #3: 0x104360f78 Interlock`-[ViewController touchesBegan:withEvent:] + at V
 (lldb) group_dir
 /private/var/mobile/Containers/Shared/AppGroup/9460EA21-AE6A-4220-9BB3-6EC8B971CDAE
 ```
+
+[back to commands list](#Commands-list)
 
 
 
@@ -203,6 +213,8 @@ drwxr-xr-x         64B 2023-05-16 04:51:14 +0000 tmp
 (lldb) ls /var/mobile/Containers/Data/Application/09E63130-623F-4124-BCBB-59E20BD28964/Documents
 -rw-r--r--         18B 2023-05-16 05:36:05 +0000 report.txt
 ```
+
+[back to commands list](#Commands-list)
 
 
 
@@ -232,6 +244,8 @@ call Interlock`-[ViewController touchesBegan:withEvent:] + 136 at ViewController
 ...
 ```
 
+[back to commands list](#Commands-list)
+
 
 
 #### thread_eb - extended backtrace of thread
@@ -258,6 +272,8 @@ thread #4294967295: tid = 0x190c, 0x0000000104e907cc libdispatch.dylib`_dispatch
     frame #3: 0x000000018b9bb760 UIKit`-[UIResponder touchesBegan:withEvent:] + 60
 ...
 ```
+
+[back to commands list](#Commands-list)
 
 
 
@@ -288,6 +304,8 @@ Interlock:
 (lldb) ent UIKit
 UIKit apparently does not contain code signature
 ```
+
+[back to commands list](#Commands-list)
 
 
 
@@ -329,6 +347,8 @@ Print segments and section info of macho.
 [0x104eaa510-0x104eaf3e0) 0x4ed0 Code Signature
 ```
 
+[back to commands list](#Commands-list)
+
 
 
 #### main
@@ -339,6 +359,8 @@ Print the address of main function.
 (lldb) main
 function main at 0x102911b70(fileoff: 0x5b70)
 ```
+
+[back to commands list](#Commands-list)
 
 
 
@@ -351,6 +373,8 @@ Print main executable name.
 LLDBCode
 ```
 
+[back to commands list](#Commands-list)
+
 
 
 #### appdelegate
@@ -361,6 +385,8 @@ Find the class that conforms to the UIApplicationDelegate protocol.
 (lldb) appdelegate
 AppDelegate
 ```
+
+[back to commands list](#Commands-list)
 
 
 
@@ -374,6 +400,8 @@ AppDelegate <0x10468e378>
 SceneDelegate <0x10468e418>
 ViewController <0x10468e260>
 ```
+
+[back to commands list](#Commands-list)
 
 
 
@@ -391,6 +419,8 @@ index   load addr(slide)       vmsize path
 [  3] 0x1023f8000(0x1023f8000)  81.9K /usr/lib/libsubstrate.dylib
 ...
 ```
+
+[back to commands list](#Commands-list)
 
 
 
@@ -424,6 +454,8 @@ found at 0x184070f7c where = [0x000000018002cf78-0x000000018002cfb8) libSystem.B
 0x184070fac: 00 00 00 00 00 00 00 00 00 92 93 40 01 00 00 00  ...........@....
 ```
 
+[back to commands list](#Commands-list)
+
 
 
 #### blookup - lookup bytes
@@ -439,17 +471,21 @@ Lookup the specified bytes in user modules.
 32 locations found
 ```
 
+[back to commands list](#Commands-list)
+
 
 
 #### patch
 
-Patch the specified bytes in user modules.
+Patch bytes in user modules.
 
 ```stylus
 (lldb) patch c0 03 5f d6
 -----try to patch bytes in LLDBCode-----
 patch 32 locations
 ```
+
+[back to commands list](#Commands-list)
 
 
 
@@ -476,6 +512,8 @@ frame #0: 0x0000000102dd3268 LLDBCode`__41-[ViewController touchesBegan:withEven
 frame #0: 0x0000000102dd318c LLDBCode`__41-[ViewController touchesBegan:withEvent:]_block_invoke(.block_descriptor=0x0000000102ec1500) at ViewController.m:45
 ```
 
+[back to commands list](#Commands-list)
+
 
 
 #### bda - breakpoint disable at class
@@ -496,6 +534,8 @@ disable breakpoint 1.27: where = LLDBCode`__41-[ViewController touchesBegan:with
 disable breakpoint 1.23: where = LLDBCode`-[ViewController(extension) test] at ViewController.m:20, address = 0x0000000102ec2e7c, unresolved, hit count = 0  Options: disabled 
 ```
 
+[back to commands list](#Commands-list)
+
 
 
 #### dmodule - dump module
@@ -513,6 +553,8 @@ ignore __DATA_DIRTY.__common
 ```
 
 > 注意：加载时被修改的数据未恢复
+
+[back to commands list](#Commands-list)
 
 
 
@@ -542,6 +584,8 @@ Generating "JITDemo.ipa"
 dump success, ipa path: /Users/xxx/lldb_dump_macho/JITDemo/JITDemo.ipa
 ```
 
+[back to commands list](#Commands-list)
+
 
 
 #### dfile - download file
@@ -553,6 +597,8 @@ Download file from home, bundle or group path.
 dumping Info.plist, this may take a while
 1464 bytes written to '/Users/xxx/Info.plist'
 ```
+
+[back to commands list](#Commands-list)
 
 
 
@@ -579,6 +625,8 @@ dumping JITDemo.app, this may take a while
 196731 bytes written to '/Users/xxx/JITDemo.app/embedded.mobileprovision'
 ```
 
+[back to commands list](#Commands-list)
+
 
 
 #### ufile - upload local file to device
@@ -600,6 +648,8 @@ upload success
 -rw-r--r--       12.1K 2023-08-10 07:11:22 +0000 uploadfile
 ```
 
+[back to commands list](#Commands-list)
+
 
 
 #### rm - remove file
@@ -617,6 +667,8 @@ remove success
 /var/mobile/Containers/Data/Application/B142040E-B1A0-4E97-8E76-03357585BFF8/Documents
 -rw-r--r--       12.1K 2023-08-10 07:32:05 +0000 test
 ```
+
+[back to commands list](#Commands-list)
 
 
 
@@ -638,6 +690,8 @@ Find the specified block(s) in user modules.
 find a block: 0x100f18210 in JITDemo`-[ViewController touchesBegan:withEvent:]
 1 block(s) resolved
 ```
+
+[back to commands list](#Commands-list)
 
 
 
@@ -670,6 +724,8 @@ find a stack block @0x104b32080 in LLDBJIT`+[Image getBlocksInfo:] at Image.m:0:
 	stack block func addr 0x104b34d40 LLDBJIT`None
 85 block(s) resolved
 ```
+
+[back to commands list](#Commands-list)
 
 
 
@@ -720,6 +776,8 @@ break stack block with Breakpoint 93: JITDemo`___lldb_unnamed_symbol83, address 
 set 7 breakpoints
 ```
 
+[back to commands list](#Commands-list)
+
 
 
 #### initfunc - print mod init func
@@ -733,6 +791,8 @@ address = 0x100e08cb0 JITDemo`entry1 at main.m:708:0
 address = 0x100e0960c JITDemo`entry2 at main.m:740:0
 ```
 
+[back to commands list](#Commands-list)
+
 
 
 #### binitfunc - break mod init func
@@ -745,6 +805,8 @@ Break module init function(s) in user modules.
 Breakpoint 6: JITDemo`entry1 at main.m:708:0, address = 0x100e08cb0
 Breakpoint 7: JITDemo`entry2 at main.m:740:0, address = 0x100e0960c
 ```
+
+[back to commands list](#Commands-list)
 
 
 
@@ -761,6 +823,8 @@ Breakpoint 4: JITDemo`+[AppDelegate load] at AppDelegate.m:16:0, address = 0x102
 set 2 breakpoints
 ```
 
+[back to commands list](#Commands-list)
+
 
 
 #### bmain - break main function
@@ -770,4 +834,5 @@ set 2 breakpoints
 Breakpoint 9: BasicSyntax`___lldb_unnamed_symbol266, address = 0x10017c3fc
 ```
 
+[back to commands list](#Commands-list)
 
