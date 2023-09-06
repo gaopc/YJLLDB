@@ -47,6 +47,7 @@ def download_file(debugger, command, result, internal_dict):
         return
 
     for filepath in args:
+        filepath, _ = util.absolute_path(filepath)
         file_info_str = load_file(filepath)
         if file_info_str:
             file_info = json.loads(file_info_str)
@@ -78,6 +79,7 @@ def download_dir(debugger, command, result, internal_dict):
         return
 
     for filepath in args:
+        filepath, _ = util.absolute_path(filepath)
         dir_info_str = load_dir(filepath)
         if dir_info_str:
             dir_info = json.loads(dir_info_str)
@@ -109,7 +111,7 @@ def upload_file(debugger, command, result, internal_dict):
         return
 
     src = args[0]
-    dst = args[1]
+    dst, _ = util.absolute_path(args[1])
 
     stats = os.stat(src)
     data_size = stats.st_size
@@ -118,7 +120,7 @@ def upload_file(debugger, command, result, internal_dict):
         mem_info = json.loads(mem_info_str)
         file_name = os.path.basename(src)
         print('uploading {}, this may take a while'.format(file_name))
-        success, data_addr = write_mem_with_info(mem_info, src, data_size)
+        success, data_addr = write_mem_with_info(mem_info, src)
         if success:
             message = write_data_to_file(data_addr, data_size, dst, file_name)
             print(message)
@@ -147,7 +149,7 @@ def remove_file(debugger, command, result, internal_dict):
         print(parser.get_usage())
         return
 
-    filepath = args[0]
+    filepath, _ = util.absolute_path(args[0])
     message = remove_file_on_device(filepath)
     print(message)
 
@@ -211,7 +213,7 @@ def dump_dir_with_info(dir_info):
         dump_data(output_filepath, data_size, data_addr)
 
 
-def write_mem_with_info(dir_info, src, data_size):
+def write_mem_with_info(dir_info, src):
     error = dir_info.get("error")
     if error:
         print(error)
@@ -426,7 +428,7 @@ def remove_file_on_device(filepath):
         for (NSInteger idx = 1; idx < count; idx++) {
             NSString *subpath = subpaths[idx];
             j = idx;
-            while (j > 0 && [subpaths[j - 1] compare:subpath] == NSOrderedAscending) {
+            while (j > 0 && [(NSString *)subpaths[j - 1] compare:subpath] == NSOrderedAscending) {
                 subpaths[j] = subpaths[j - 1];
                 j--;
             }
