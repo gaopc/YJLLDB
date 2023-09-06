@@ -198,7 +198,8 @@ def get_function_starts(module):
         const mach_header_t *mach_header = (const mach_header_t *)_dyld_get_image_header(i);
         
         NSString *module_name = [[NSString stringWithUTF8String:name] lastPathComponent];
-        if ([module_name isEqualToString:x_module_name]) {
+        if ([module_name isEqualToString:x_module_name] ||
+            [module_name isEqualToString:[x_module_name stringByAppendingString:@".dylib"]]) {
             x_mach_header = mach_header;
             slide = (intptr_t)_dyld_get_image_vmaddr_slide(i);
             break;
@@ -219,6 +220,9 @@ def get_function_starts(module):
                     sc = (struct load_command *)cur;
                     if (sc->cmd == 0x19) { // LC_SEGMENT_64
                         struct segment_command_64 *seg = (struct segment_command_64 *)sc;
+                        if (slide == 0 && strcmp(seg->segname, "__TEXT") == 0) {
+                            slide = (uint64_t)x_mach_header - seg->vmaddr;
+                        }
                         if (strcmp(seg->segname, "__LINKEDIT") == 0) { //SEG_LINKEDIT
                             file_offset = seg->fileoff;
                             vmaddr      = seg->vmaddr;
@@ -235,28 +239,26 @@ def get_function_starts(module):
     NSMutableString *addresses = [NSMutableString string];
     if (func_starts) {
         const uint8_t* infoStart = NULL;
-        if (slide == 0) {
-            infoStart = (uint8_t*)((uint64_t)x_mach_header + func_starts->dataoff);
-        } else {
-            infoStart = (uint8_t*)((uint64_t)vmaddr + func_starts->dataoff - file_offset + slide);
-        }
+        infoStart = (uint8_t*)((uint64_t)vmaddr + func_starts->dataoff - file_offset + slide);
         const uint8_t* infoEnd = &infoStart[func_starts->datasize];
         uint64_t address = (uint64_t)x_mach_header;
         for (const uint8_t *p = infoStart; (*p != 0) && (p < infoEnd); ) {
-            uint64_t delta = 0;
-            uint32_t shift = 0;
-            bool more = true;
+            uint64_t offset = 0;
+            uint32_t bit = 0;
             do {
-                uint8_t byte = *p++;
-                delta |= ((byte & 0x7F) << shift);
-                shift += 7;
-                if ( byte < 0x80 ) {
-                    address += delta;
-                    //printf("0x%llx\n", address);
-                    [addresses appendFormat:@"0x%llx;", address];
-                    more = false;
+                uint64_t slice = *p & 0x7f;
+                
+                if (bit >= 64 || slice << bit >> bit != slice)
+                    [NSException raise:@"uleb128 error" format:@"uleb128 too big"];
+                else {
+                    offset |= (slice << bit);
+                    bit += 7;
                 }
-            } while (more);
+            } while (*p++ & 0x80);
+            
+            address += offset;
+//            printf("0x%llx %llu\n", address, offset);
+            [addresses appendFormat:@"0x%llx;", address];
         }
     }
     NSUInteger len = [addresses length];
