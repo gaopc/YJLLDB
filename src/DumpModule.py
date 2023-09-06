@@ -50,11 +50,11 @@ def dump_module(debugger, command, result, internal_dict):
     output_dir = os.path.expanduser('~') + '/lldb_dump_macho'
     util.try_mkdir(output_dir)
 
-    module_info_str = get_module_regions(debugger, lookup_module_name)
+    module_info_str = get_module_regions(lookup_module_name)
     if module_info_str:
         module_info = json.loads(module_info_str)
         print('dumping {}, this may take a while'.format(lookup_module_name))
-        dump_message = dump_module_with_info(debugger, module_info, output_dir)
+        dump_message = dump_module_with_info(module_info, output_dir)
 
         result.AppendMessage("{}".format(dump_message))
 
@@ -90,6 +90,8 @@ def dump_module_before_load_called(debugger, command, result, internal_dict):
     util.try_mkdir(output_dir)
 
     target = debugger.GetSelectedTarget()
+    target_module = None
+    module_name = None
     for module in target.module_iter():
         module_name = module.GetFileSpec().GetFilename()
         if lookup_module_name.lower() == module_name.lower():
@@ -100,6 +102,8 @@ def dump_module_before_load_called(debugger, command, result, internal_dict):
     module_size = 0
     regions = []
     text_addr = 0
+    slide = -1
+    header_addr = -1
     for seg in target_module.section_iter():
         seg_name = seg.GetName()
         if seg_name == '__PAGEZERO':
@@ -149,12 +153,12 @@ def dump_module_before_load_called(debugger, command, result, internal_dict):
     module_info['regions'] = regions
 
     print('dumping {}, this may take a while'.format(lookup_module_name))
-    dump_message = dump_module_with_info(debugger, module_info, output_dir)
+    dump_message = dump_module_with_info(module_info, output_dir)
 
     result.AppendMessage("{}".format(dump_message))
 
 
-def dump_region(debugger, module_name, slide, region, output_dir):
+def dump_region(module_name, slide, region, output_dir):
     comps = region.split('-')
     addr = int(comps[0], 16) + slide
     region_size = int(comps[1], 16)
@@ -162,7 +166,7 @@ def dump_region(debugger, module_name, slide, region, output_dir):
     name = comps[3]
 
     res = lldb.SBCommandReturnObject()
-    interpreter = debugger.GetCommandInterpreter()
+    interpreter = lldb.debugger.GetCommandInterpreter()
     cmd = 'memory read --force --outfile {}/{}/{} --binary --count {} {}' \
         .format(output_dir, module_name, name, region_size, addr)
     interpreter.HandleCommand(cmd, res)
@@ -170,7 +174,7 @@ def dump_region(debugger, module_name, slide, region, output_dir):
     return {"offset": file_offset, "name": name}
 
 
-def dump_module_with_info(debugger, module_info, output_dir):
+def dump_module_with_info(module_info, output_dir):
     module_name = module_info["module_name"].replace(' ', '_')
     slide = module_info["slide"]
     module_regions = module_info["regions"]
@@ -187,10 +191,10 @@ def dump_module_with_info(debugger, module_info, output_dir):
         sections = region_info.get("sections")
         if sections and len(sections):
             for section in sections:
-                info = dump_region(debugger, module_name, slide, section, output_dir)
+                info = dump_region(module_name, slide, section, output_dir)
                 outputs.append(info)
         else:
-            info = dump_region(debugger, module_name, slide, region_info["segment"], output_dir)
+            info = dump_region(module_name, slide, region_info["segment"], output_dir)
             outputs.append(info)
 
     output_path = module_dir + '/macho_' + module_name
@@ -227,7 +231,7 @@ def module_info_write_to_file(module_info, module_dir):
     json_fp.close()
 
 
-def get_module_regions(debugger, module):
+def get_module_regions(module):
     command_script = '@import Foundation;'
     command_script += r'''
     struct mach_header_64 {
@@ -410,7 +414,7 @@ def get_module_regions(debugger, module):
     json_str;
     '''
 
-    ret_str = util.exe_script(debugger, command_script)
+    ret_str = util.exe_script(command_script)
 
     return ret_str
 

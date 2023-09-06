@@ -40,11 +40,11 @@ def dump_app(debugger, command, result, internal_dict):
     output_dir = os.path.expanduser('~') + '/lldb_dump_macho'
     util.try_mkdir(output_dir)
 
-    app_info_str = get_app_regions(debugger, options.apply_patch)
+    app_info_str = get_app_regions(options.apply_patch)
     if app_info_str:
         app_info = json.loads(app_info_str)
         print('dumping {}, this may take a while'.format(app_info["app_name"]))
-        app_name, work_dir, app_path = dump_app_with_info(debugger, app_info, output_dir)
+        app_name, work_dir, app_path = dump_app_with_info(app_info, output_dir)
 
         success = create_ipa(work_dir, app_name, options.min_os_version)
         if success:
@@ -53,15 +53,15 @@ def dump_app(debugger, command, result, internal_dict):
             result.AppendMessage("dump failure")
 
 
-def dump_region(debugger, base, offset, size, output_path):
+def dump_region(base, offset, size, output_path):
     res = lldb.SBCommandReturnObject()
-    interpreter = debugger.GetCommandInterpreter()
+    interpreter = lldb.debugger.GetCommandInterpreter()
     cmd = 'memory read --force --outfile {} --binary --count {} {}' \
         .format(output_path, size, base + offset)
     interpreter.HandleCommand(cmd, res)
 
 
-def dump_app_with_info(debugger, app_info, output_dir):
+def dump_app_with_info(app_info, output_dir):
     app_name = app_info["app_name"]
     files = app_info["files"]
     encrypted_images = app_info["encryptedImages"]
@@ -79,7 +79,7 @@ def dump_app_with_info(debugger, app_info, output_dir):
     output_app_path = datas_dir + '/' + app_name + '.app'
 
     res = lldb.SBCommandReturnObject()
-    interpreter = debugger.GetCommandInterpreter()
+    interpreter = lldb.debugger.GetCommandInterpreter()
     for file in files:
         rel_path = file["rel_path"]
         print("copy file {}.app{}".format(app_name, rel_path))
@@ -111,7 +111,7 @@ def dump_app_with_info(debugger, app_info, output_dir):
             decrypted_path = datas_dir + '/' + exe_name + '_text_data'
 
             print("patching {}.app{}".format(app_name, rel_path))
-            dump_region(debugger, header, crypt_off, crypt_size, decrypted_path)
+            dump_region(header, crypt_off, crypt_size, decrypted_path)
 
             exe_path = datas_dir + '/' + app_name + '.app' + rel_path
             # thin
@@ -181,7 +181,7 @@ def create_ipa(work_dir, display_name, os_version):
     return success
 
 
-def get_app_regions(debugger, apply_patch):
+def get_app_regions(apply_patch):
     command_script = '@import Foundation;'
     command_script += r'''
     struct mach_header_64 {
@@ -334,7 +334,7 @@ def get_app_regions(debugger, apply_patch):
     json_str;
     '''
 
-    ret_str = util.exe_script(debugger, command_script)
+    ret_str = util.exe_script(command_script)
 
     return ret_str
 

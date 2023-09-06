@@ -45,9 +45,9 @@ def get_desc_for_address(addr, default_name=None, need_line=True):
     return "{}`{}".format(module_name, sym_name)
 
 
-def exe_script(debugger, command_script):
+def exe_script(command_script):
     res = lldb.SBCommandReturnObject()
-    interpreter = debugger.GetCommandInterpreter()
+    interpreter = lldb.debugger.GetCommandInterpreter()
     interpreter.HandleCommand('exp -l objc -O -- ' + command_script, res)
 
     if not res.HasResult():

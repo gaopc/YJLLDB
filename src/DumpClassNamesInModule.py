@@ -39,7 +39,7 @@ def dump_classes_in_module(debugger, command, result, internal_dict):
         lookup_module_name = ''
 
     lookup_module_name = lookup_module_name.replace("'", "")
-    class_names_str = get_module_regions(debugger, lookup_module_name)
+    class_names_str = get_module_regions(lookup_module_name)
     if class_names_str:
         class_names = class_names_str.split('\n')
         class_names = sorted(class_names)
@@ -47,7 +47,7 @@ def dump_classes_in_module(debugger, command, result, internal_dict):
         result.AppendMessage("{}".format('\n'.join(class_names)))
 
 
-def get_module_regions(debugger, module):
+def get_module_regions(module):
     command_script = '@import Foundation;'
     command_script += 'NSString *x_module_name = @"' + module + '";'
     command_script += r'''
@@ -91,7 +91,7 @@ def get_module_regions(debugger, module):
     result;
     '''
 
-    ret_str = util.exe_script(debugger, command_script)
+    ret_str = util.exe_script(command_script)
 
     return ret_str
 

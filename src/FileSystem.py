@@ -164,7 +164,7 @@ def ls_dir(debugger, dir_path):
     result;
     '''
 
-    ret_str = util.exe_script(debugger, command_script)
+    ret_str = util.exe_script(command_script)
 
     return ret_str
 
@@ -212,7 +212,7 @@ def get_bundle_directory(debugger):
 
     path
     '''
-    ret_str = util.exe_script(debugger, command_script)
+    ret_str = util.exe_script(command_script)
 
     return ret_str
 
@@ -224,7 +224,7 @@ def get_home_directory(debugger):
 
     path
     '''
-    ret_str = util.exe_script(debugger, command_script)
+    ret_str = util.exe_script(command_script)
 
     return ret_str
 
@@ -236,7 +236,7 @@ def get_doc_directory(debugger):
 
     path
     '''
-    ret_str = util.exe_script(debugger, command_script)
+    ret_str = util.exe_script(command_script)
 
     return ret_str
 
@@ -248,7 +248,7 @@ def get_library_directory(debugger):
 
     path
     '''
-    ret_str = util.exe_script(debugger, command_script)
+    ret_str = util.exe_script(command_script)
 
     return ret_str
 
@@ -260,7 +260,7 @@ def get_tmp_directory(debugger):
 
     path
     '''
-    ret_str = util.exe_script(debugger, command_script)
+    ret_str = util.exe_script(command_script)
 
     return ret_str
 
@@ -272,7 +272,7 @@ def get_caches_directory(debugger):
 
     path
     '''
-    ret_str = util.exe_script(debugger, command_script)
+    ret_str = util.exe_script(command_script)
 
     return ret_str
 
@@ -458,7 +458,7 @@ def get_group_path(debugger):
     }
     group_path;
     '''
-    ret_str = util.exe_script(debugger, command_script)
+    ret_str = util.exe_script(command_script)
 
     return ret_str
 

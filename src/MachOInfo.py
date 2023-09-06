@@ -373,7 +373,7 @@ def get_entitlements(debugger, keyword):
     
     result;
     '''
-    ret_str = util.exe_script(debugger, command_script)
+    ret_str = util.exe_script(command_script)
 
     return ret_str
 

@@ -74,7 +74,7 @@ def trace_all_functions_in_module(debugger, command, result, internal_dict):
         print("-----traces functions in %s-----" % name)
         func_names = set()
 
-        addr_str = get_function_starts(debugger, lookup_module_name)
+        addr_str = get_function_starts(lookup_module_name)
         if not addr_str:
             continue
         if "returned empty description" in addr_str:
@@ -254,7 +254,7 @@ def breakpoint_handler(frame, bp_loc, dict):
         last_offset = offset
 
 
-def get_function_starts(debugger, module):
+def get_function_starts(module):
     command_script = '@import Foundation;'
     command_script += r'''
     struct mach_header_64 {
@@ -392,7 +392,7 @@ def get_function_starts(debugger, module):
     addresses;
     '''
 
-    ret_str = util.exe_script(debugger, command_script)
+    ret_str = util.exe_script(command_script)
 
     return ret_str
 

@@ -69,7 +69,7 @@ def find_all_blocks(debugger, command, result, internal_dict):
             continue
 
         print("-----try to lookup block in %s-----" % module_name)
-        blocks_info_str = get_blocks_info(debugger, module_name)
+        blocks_info_str = get_blocks_info(module_name)
         if not blocks_info_str:
             continue
 
@@ -500,7 +500,7 @@ def find_blocks(debugger, command, result, internal_dict):
             continue
 
         print("-----try to lookup block in %s-----" % name)
-        blocks_info_str = get_blocks_info(debugger, name)
+        blocks_info_str = get_blocks_info(name)
         if not blocks_info_str:
             continue
 
@@ -809,7 +809,7 @@ def break_blocks(debugger, command, result, internal_dict):
             continue
 
         print("-----try to lookup block in %s-----" % name)
-        blocks_info_str = get_blocks_info(debugger, name)
+        blocks_info_str = get_blocks_info(name)
         if not blocks_info_str:
             continue
 
@@ -1024,7 +1024,7 @@ def break_blocks(debugger, command, result, internal_dict):
     result.AppendMessage("set {} breakpoints".format(total_count))
 
 
-def get_blocks_info(debugger, module):
+def get_blocks_info(module):
     command_script = '@import Foundation;'
     command_script += r'''
     struct mach_header_64 {
@@ -1192,7 +1192,7 @@ def get_blocks_info(debugger, module):
     json_str;
     '''
 
-    ret_str = util.exe_script(debugger, command_script)
+    ret_str = util.exe_script(command_script)
 
     return ret_str
 

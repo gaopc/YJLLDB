@@ -31,7 +31,7 @@ def find_app_delegate(debugger, command, result, internal_dict):
         result.SetError("\n" + parser.get_usage())
         return
 
-    class_names_str = get_app_delegate_class(debugger)
+    class_names_str = get_app_delegate_class()
     if class_names_str:
         class_names = class_names_str.split('\n')
         class_names = sorted(class_names)
@@ -39,7 +39,7 @@ def find_app_delegate(debugger, command, result, internal_dict):
         result.AppendMessage("{}".format('\n'.join(class_names)))
 
 
-def get_app_delegate_class(debugger):
+def get_app_delegate_class():
     command_script = '@import Foundation;'
     command_script += r'''
     NSString *module_path = [[NSBundle mainBundle] executablePath];
@@ -65,7 +65,7 @@ def get_app_delegate_class(debugger):
     result;
     '''
 
-    ret_str = util.exe_script(debugger, command_script)
+    ret_str = util.exe_script(command_script)
 
     return ret_str
 

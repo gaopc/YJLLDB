@@ -47,11 +47,11 @@ def download_file(debugger, command, result, internal_dict):
         return
 
     for filepath in args:
-        file_info_str = load_file(debugger, filepath)
+        file_info_str = load_file(filepath)
         if file_info_str:
             file_info = json.loads(file_info_str)
             print('dumping {}, this may take a while'.format(file_info["file_name"]))
-            dump_file_with_info(debugger, file_info)
+            dump_file_with_info(file_info)
 
 
 def download_dir(debugger, command, result, internal_dict):
@@ -78,11 +78,11 @@ def download_dir(debugger, command, result, internal_dict):
         return
 
     for filepath in args:
-        dir_info_str = load_dir(debugger, filepath)
+        dir_info_str = load_dir(filepath)
         if dir_info_str:
             dir_info = json.loads(dir_info_str)
             print('dumping {}, this may take a while'.format(dir_info["dir_name"]))
-            dump_dir_with_info(debugger, dir_info)
+            dump_dir_with_info(dir_info)
 
 
 def upload_file(debugger, command, result, internal_dict):
@@ -113,14 +113,14 @@ def upload_file(debugger, command, result, internal_dict):
 
     stats = os.stat(src)
     data_size = stats.st_size
-    mem_info_str = allocate_memory(debugger, data_size)
+    mem_info_str = allocate_memory(data_size)
     if mem_info_str:
         mem_info = json.loads(mem_info_str)
         file_name = os.path.basename(src)
         print('uploading {}, this may take a while'.format(file_name))
-        success, data_addr = write_mem_with_info(debugger, mem_info, src, data_size)
+        success, data_addr = write_mem_with_info(mem_info, src, data_size)
         if success:
-            message = write_data_to_file(debugger, data_addr, data_size, dst, file_name)
+            message = write_data_to_file(data_addr, data_size, dst, file_name)
             print(message)
 
 
@@ -148,16 +148,16 @@ def remove_file(debugger, command, result, internal_dict):
         return
 
     filepath = args[0]
-    message = remove_file_on_device(debugger, filepath)
+    message = remove_file_on_device(filepath)
     print(message)
 
 
-def dump_data(debugger, output_filepath, data_size, data_addr):
+def dump_data(output_filepath, data_size, data_addr):
     directory = os.path.dirname(output_filepath)
     util.try_mkdir(directory)
 
     res = lldb.SBCommandReturnObject()
-    interpreter = debugger.GetCommandInterpreter()
+    interpreter = lldb.debugger.GetCommandInterpreter()
     cmd = 'memory read --force --outfile {} --binary --count {} {}' \
         .format(output_filepath, data_size, data_addr)
     interpreter.HandleCommand(cmd, res)
@@ -168,7 +168,7 @@ def dump_data(debugger, output_filepath, data_size, data_addr):
         print("{} bytes written to '{}'".format(data_size, output_filepath))
 
 
-def dump_file_with_info(debugger, file_info):
+def dump_file_with_info(file_info):
     error = file_info.get("error")
     if error:
         print(error)
@@ -184,10 +184,10 @@ def dump_file_with_info(debugger, file_info):
     output_filepath = os.path.join(home_path, file_name)
     if os.path.exists(output_filepath):
         output_filepath = os.path.join(home_path, 'dumped_' + file_name)
-    dump_data(debugger, output_filepath, data_size, data_addr)
+    dump_data(output_filepath, data_size, data_addr)
 
 
-def dump_dir_with_info(debugger, dir_info):
+def dump_dir_with_info(dir_info):
     error = dir_info.get("error")
     if error:
         print(error)
@@ -208,10 +208,10 @@ def dump_dir_with_info(debugger, dir_info):
         comps = data_info.split('-')
         data_addr = int(comps[0])
         data_size = int(comps[1])
-        dump_data(debugger, output_filepath, data_size, data_addr)
+        dump_data(output_filepath, data_size, data_addr)
 
 
-def write_mem_with_info(debugger, dir_info, src, data_size):
+def write_mem_with_info(dir_info, src, data_size):
     error = dir_info.get("error")
     if error:
         print(error)
@@ -221,7 +221,7 @@ def write_mem_with_info(debugger, dir_info, src, data_size):
 
     with open(src, 'rb') as src_file:
         file_data = src_file.read()
-        target = debugger.GetSelectedTarget()
+        target = lldb.debugger.GetSelectedTarget()
         process = target.GetProcess()
         error = lldb.SBError()
         process.WriteMemory(data_addr, file_data, error)
@@ -232,7 +232,7 @@ def write_mem_with_info(debugger, dir_info, src, data_size):
     return True, data_addr
 
 
-def load_file(debugger, filepath):
+def load_file(filepath):
     command_script = '@import Foundation;'
     command_script += 'NSString *filepath = @"' + filepath + '";'
     command_script += r'''
@@ -268,12 +268,12 @@ def load_file(debugger, filepath):
     json_str;
     '''
 
-    ret_str = util.exe_script(debugger, command_script)
+    ret_str = util.exe_script(command_script)
 
     return ret_str
 
 
-def load_dir(debugger, filepath):
+def load_dir(filepath):
     command_script = '@import Foundation;'
     command_script += 'NSString *filepath = @"' + filepath + '";'
     command_script += r'''
@@ -326,12 +326,12 @@ def load_dir(debugger, filepath):
     json_str;
     '''
 
-    ret_str = util.exe_script(debugger, command_script)
+    ret_str = util.exe_script(command_script)
 
     return ret_str
 
 
-def allocate_memory(debugger, size):
+def allocate_memory(size):
     command_script = '@import Foundation;'
     command_script += 'size_t size = {};'.format(size)
     command_script += r'''
@@ -355,12 +355,12 @@ def allocate_memory(debugger, size):
     json_str;
     '''
 
-    ret_str = util.exe_script(debugger, command_script)
+    ret_str = util.exe_script(command_script)
 
     return ret_str
 
 
-def write_data_to_file(debugger, data_addr, data_size, dst, file_name):
+def write_data_to_file(data_addr, data_size, dst, file_name):
     command_script = '@import Foundation;\n'
     command_script += 'NSString *pathOrDir = @"' + dst + '";\n'
     command_script += 'NSString *filename = @"' + file_name + '";\n'
@@ -389,12 +389,12 @@ def write_data_to_file(debugger, data_addr, data_size, dst, file_name):
     error != nil ? error.localizedDescription : @"upload success";
     '''
 
-    ret_str = util.exe_script(debugger, command_script)
+    ret_str = util.exe_script(command_script)
 
     return ret_str
 
 
-def remove_file_on_device(debugger, filepath):
+def remove_file_on_device(filepath):
     command_script = '@import Foundation;\n'
     command_script += 'NSString *filepath = @"' + filepath + '";\n'
     command_script += r'''
@@ -444,7 +444,7 @@ def remove_file_on_device(debugger, filepath):
     message;
     '''
 
-    ret_str = util.exe_script(debugger, command_script)
+    ret_str = util.exe_script(command_script)
 
     return ret_str
 
