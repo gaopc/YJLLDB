@@ -89,8 +89,6 @@ def parse_macho(debugger, command, result, internal_dict):
             continue
 
         module_name = module_file_spec.GetFilename()
-        if module_name.startswith('libswift'):
-            continue
 
         if len(lookup_module_name) and lookup_module_name != module_name:
             continue
@@ -102,8 +100,8 @@ def parse_macho(debugger, command, result, internal_dict):
             continue
 
         header_addr = seg.GetLoadAddress(target)
-        first_set = seg.GetSubSectionAtIndex(0)
-        sec_addr = first_set.GetLoadAddress(target)
+        first_sec = seg.GetSubSectionAtIndex(0)
+        sec_addr = first_sec.GetLoadAddress(target)
 
         error = lldb.SBError()
         header_size = sec_addr - header_addr

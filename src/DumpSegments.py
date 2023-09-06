@@ -54,8 +54,8 @@ def dump_segments(debugger, command, result, internal_dict):
             header_addr = seg.GetLoadAddress(target)
             slide = header_addr - seg.GetFileAddress()
 
-            first_set = seg.GetSubSectionAtIndex(0)
-            sec_addr = first_set.GetLoadAddress(target)
+            first_sec = seg.GetSubSectionAtIndex(0)
+            sec_addr = first_sec.GetLoadAddress(target)
 
             error = lldb.SBError()
             header_size = sec_addr - header_addr
