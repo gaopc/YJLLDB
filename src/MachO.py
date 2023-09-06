@@ -138,8 +138,8 @@ def parse_section(base, m_offset):
     """Parse section."""
 
     if g_is_64_bit:
-        read_size = 56
-        struct_format = '<16s16s3Q'
+        read_size = 52
+        struct_format = '<16s16s2QI'
     else:
         read_size = 44
         struct_format = '<16s16s3I'
